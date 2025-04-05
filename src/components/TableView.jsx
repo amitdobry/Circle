@@ -12,12 +12,10 @@ export default function TableView() {
 
   const [participants, setParticipants] = useState([]);
   const [pointerMap, setPointerMap] = useState({});
-  const [raisedHands, setRaisedHands] = useState(new Set());
   const [liveSpeakerName, setLiveSpeakerName] = useState(null);
   const [panelHidden, setPanelHidden] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
-  const [hasRaisedHand, setHasRaisedHand] = useState(false);
 
   const seatCount = participants.length;
   const radiusX = 300;
@@ -70,20 +68,12 @@ export default function TableView() {
       setPointerMap(map);
     });
 
-    socket.on("hand-raised", (name) => {
-      setRaisedHands((prev) => new Set(prev).add(name));
-    });
-
-    socket.on("hand-lowered", (name) => {
-      setRaisedHands((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(name);
-        return newSet;
-      });
-    });
-
-    socket.on("camera-activate", ({ name }) => {
+    socket.on("live-speaker", ({ name }) => {
       setLiveSpeakerName(name);
+    });
+
+    socket.on("live-speaker-cleared", () => {
+      setLiveSpeakerName(null);
     });
 
     return () => {
@@ -91,23 +81,18 @@ export default function TableView() {
       socket.off("user-list");
       socket.off("update-pointing");
       socket.off("initial-pointer-map");
-      socket.off("hand-raised");
-      socket.off("hand-lowered");
-      socket.off("camera-activate");
+      socket.off("live-speaker");
+      socket.off("live-speaker-cleared");
     };
   }, [me]);
 
   const handleSelect = (id) => {
     setSelectedTarget(id);
-    setHasRaisedHand(false);
-    socket.emit("lower-hand", { name: me });
     socket.emit("pointing", { from: me, to: id });
   };
 
   const raiseHand = () => {
-    setSelectedTarget(me); // Point to self
-    setHasRaisedHand(true);
-    socket.emit("raise-hand", { name: me });
+    setSelectedTarget(me);
     socket.emit("pointing", { from: me, to: me });
   };
 
@@ -126,9 +111,9 @@ export default function TableView() {
               ref={videoRef}
               autoPlay
               playsInline
-              muted={me !== liveSpeakerName}
+              muted={liveSpeakerName !== me}
               className={`w-full h-full object-cover transition-opacity duration-500 ${
-                me === liveSpeakerName ? "opacity-100" : "opacity-20"
+                liveSpeakerName === me ? "opacity-100" : "opacity-20"
               }`}
             />
           )}
@@ -140,7 +125,7 @@ export default function TableView() {
           const y = radiusY * Math.sin(angle);
           const isMe = user.name === me;
           const isLive = user.name === liveSpeakerName;
-          const handRaised = raisedHands.has(user.name);
+          const isPointingAtSelf = pointerMap[user.name] === user.name;
           positions[user.name] = { x, y };
 
           return (
@@ -153,7 +138,7 @@ export default function TableView() {
               }`}
               style={{ transform: `translate(${x}px, ${y}px)` }}>
               <div className="w-10 h-10 rounded-full bg-emerald-200 mb-1 relative">
-                {handRaised && (
+                {isPointingAtSelf && (
                   <div className="absolute -right-1 -bottom-1 text-yellow-500 text-lg">
                     ☝️
                   </div>
@@ -214,11 +199,11 @@ export default function TableView() {
             hidden={panelHidden}
             toggle={() => setPanelHidden(!panelHidden)}
             selected={selectedTarget}
-            raiseHandMode={hasRaisedHand}
+            raiseHandMode={selectedTarget === me}
           />
           <button
             onClick={raiseHand}
-            disabled={hasRaisedHand}
+            disabled={selectedTarget === me}
             className="mt-4 px-6 py-2 bg-yellow-300 text-yellow-800 rounded-full border border-yellow-400 shadow disabled:opacity-50">
             ☝️ I wish to speak
           </button>
