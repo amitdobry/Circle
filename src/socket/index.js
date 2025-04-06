@@ -1,3 +1,5 @@
 import { io } from "socket.io-client";
-const socket = io("http://localhost:3001"); // or deployed URL later
+import { SOCKET_SERVER_URL } from "../config";
+
+const socket = io(SOCKET_SERVER_URL);
 export default socket;
