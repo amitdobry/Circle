@@ -1,28 +1,44 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, JSX } from "react";
 import { useLocation } from "react-router-dom";
-import socket from "../socket";
+import socket from "../socket/index";
 import AttentionSelector from "./AttentionSelector";
+import { Participant } from "../types/participant";
 
-export default function TableView() {
+type PointerMap = Record<string, string>;
+
+export default function TableView(): JSX.Element {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const mode = queryParams.get("mode");
   const isParticipant = mode === "participant";
   const me = queryParams.get("name") || "Guest";
-
-  const [participants, setParticipants] = useState([]);
-  const [pointerMap, setPointerMap] = useState({});
-  const [liveSpeakerName, setLiveSpeakerName] = useState(null);
-  const [panelHidden, setPanelHidden] = useState(false);
-  const [cameraError, setCameraError] = useState(null);
-  const [selectedTarget, setSelectedTarget] = useState(null);
-
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [pointerMap, setPointerMap] = useState<PointerMap>({});
+  const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);
+  const [panelHidden, setPanelHidden] = useState<boolean>(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
   const seatCount = participants.length;
   const radiusX = 300;
   const radiusY = 180;
-  const positions = {};
+  const positions: Record<string, { x: number; y: number }> = {};
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const videoRef = useRef(null);
+  const avatarMap: Record<string, string> = {
+    Elemental: process.env.PUBLIC_URL + "/avatars/avatar-elemental.png",
+    Monk: process.env.PUBLIC_URL + "/avatars/avatar-monk.png",
+    Ninja: process.env.PUBLIC_URL + "/avatars/avatar-ninja.png",
+    Pharaoh: process.env.PUBLIC_URL + "/avatars/avatar-pharaoh.png",
+    Wolves: process.env.PUBLIC_URL + "/avatars/avatar-wolves.png",
+    Pirate: process.env.PUBLIC_URL + "/avatars/avatar-pirate.png",
+    Panda: process.env.PUBLIC_URL + "/avatars/avatar-panda.png",
+    Farmer: process.env.PUBLIC_URL + "/avatars/avatar-farmer.png",
+    TennisPlayer: process.env.PUBLIC_URL + "/avatars/avatar-tennisplayer.png",
+    Chipmunks: process.env.PUBLIC_URL + "/avatars/avatar-chipmunks.png",
+    BabyDragon: process.env.PUBLIC_URL + "/avatars/avatar-babydragon.png",
+    Baby: process.env.PUBLIC_URL + "/avatars/avatar-baby.png",
+  };
 
   useEffect(() => {
     const requestCameraAccess = async () => {
@@ -49,26 +65,41 @@ export default function TableView() {
     requestCameraAccess();
   }, []);
 
-  useEffect(() => {
-    socket.emit("join", { name: me });
+  const joinedRef = useRef<boolean>(false);
 
-    socket.on("user-list", (userList) => {
+  useEffect(() => {
+    if (isParticipant && me && !joinedRef.current) {
+      socket.emit("joined-table", { name: me });
+      joinedRef.current = true;
+    }
+
+    socket.on("user-list", (userList: Participant[]) => {
       setParticipants(userList);
     });
 
-    socket.on("update-pointing", ({ from, to }) => {
-      setPointerMap((prev) => ({ ...prev, [from]: to }));
-    });
-
-    socket.on("initial-pointer-map", (entries) => {
-      const map = {};
-      for (const { from, to } of entries) {
-        map[from] = to;
+    socket.on(
+      "update-pointing",
+      ({ from, to }: { from: string; to: string }) => {
+        setPointerMap((prev) => ({ ...prev, [from]: to }));
       }
-      setPointerMap(map);
+    );
+
+    socket.on("log-event", (msg: string) => {
+      setLogs((prev) => [...prev.slice(-4), msg]); // max 30 logs
     });
 
-    socket.on("live-speaker", ({ name }) => {
+    socket.on(
+      "initial-pointer-map",
+      (entries: { from: string; to: string }[]) => {
+        const map: PointerMap = {};
+        for (const { from, to } of entries) {
+          map[from] = to;
+        }
+        setPointerMap(map);
+      }
+    );
+
+    socket.on("live-speaker", ({ name }: { name: string }) => {
       setLiveSpeakerName(name);
     });
 
@@ -77,16 +108,20 @@ export default function TableView() {
     });
 
     return () => {
-      socket.emit("leave", { name: me });
+      const stillIn = participants.some((p) => p.name === me);
+      if (stillIn) {
+        socket.emit("leave", { name: me });
+      }
       socket.off("user-list");
       socket.off("update-pointing");
       socket.off("initial-pointer-map");
       socket.off("live-speaker");
       socket.off("live-speaker-cleared");
+      socket.off("log-event");
     };
   }, [me]);
 
-  const handleSelect = (id) => {
+  const handleSelect = (id: string) => {
     setSelectedTarget(id);
     socket.emit("pointing", { from: me, to: id });
   };
@@ -101,7 +136,13 @@ export default function TableView() {
       <h1 className="text-3xl font-bold mb-6">SoulCircle Table</h1>
 
       <div className="relative w-[700px] h-[500px] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center">
-        <div className="absolute w-64 h-36 rounded-xl overflow-hidden shadow-lg border border-gray-300 z-10">
+        <div className="absolute w-[280px] h-[160px] bg-white rounded-xl shadow-lg border border-gray-300 p-2 overflow-y-auto text-sm text-gray-700 space-y-1 z-10">
+          {logs.map((log, i) => (
+            <div key={i}>{log}</div>
+          ))}
+        </div>
+
+        {/* <div className="absolute w-64 h-36 rounded-xl overflow-hidden shadow-lg border border-gray-300 z-10">
           {cameraError ? (
             <div className="w-full h-full flex items-center justify-center text-sm text-red-600 bg-white p-2 text-center">
               {cameraError}
@@ -117,7 +158,7 @@ export default function TableView() {
               }`}
             />
           )}
-        </div>
+        </div> */}
 
         {participants.map((user, i) => {
           const angle = (i / seatCount) * 2 * Math.PI;
@@ -131,28 +172,39 @@ export default function TableView() {
           return (
             <div
               key={user.name}
-              className={`absolute w-24 h-24 rounded-full shadow-md flex flex-col items-center justify-center text-xs border ${
-                isMe
-                  ? "border-emerald-600 ring-4 ring-emerald-300"
-                  : "border-gray-300"
-              }`}
+              className="absolute flex flex-col items-center text-center"
               style={{ transform: `translate(${x}px, ${y}px)` }}>
-              <div className="w-10 h-10 rounded-full bg-emerald-200 mb-1 relative">
+              <div className="font-semibold text-sm mb-1">{user.name}</div>
+              <div
+                className={`w-24 h-24 rounded-full overflow-hidden relative border-4 shadow-lg ${
+                  isMe
+                    ? "border-emerald-600 ring-4 ring-emerald-300"
+                    : "border-white"
+                }`}>
+                <img
+                  src={
+                    avatarMap[user.avatarId] ||
+                    `${process.env.PUBLIC_URL}/avatars/avatar-monk.png`
+                  }
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center gap-1 mt-1 text-xs">
                 {isPointingAtSelf && (
-                  <div className="absolute -right-1 -bottom-1 text-yellow-500 text-lg">
-                    ☝️
-                  </div>
+                  <div className="text-yellow-500 text-lg">☝️</div>
                 )}
                 {isLive && (
-                  <div className="absolute -left-1 -bottom-1 text-xs bg-red-500 text-white px-1 rounded">
+                  <div className="bg-red-500 text-white px-2 py-[2px] rounded-full text-xs">
                     Live
                   </div>
                 )}
+                {isMe && (
+                  <div className="text-[10px] text-emerald-600 font-medium">
+                    You
+                  </div>
+                )}
               </div>
-              <span className="font-semibold">{user.name}</span>
-              {isMe && (
-                <span className="text-[10px] text-emerald-600">You</span>
-              )}
             </div>
           );
         })}
@@ -192,22 +244,16 @@ export default function TableView() {
       </div>
 
       {isParticipant && (
-        <>
-          <AttentionSelector
-            participants={participants.filter((p) => p.name !== me)}
-            onSelect={handleSelect}
-            hidden={panelHidden}
-            toggle={() => setPanelHidden(!panelHidden)}
-            selected={selectedTarget}
-            raiseHandMode={selectedTarget === me}
-          />
-          <button
-            onClick={raiseHand}
-            disabled={selectedTarget === me}
-            className="mt-4 px-6 py-2 bg-yellow-300 text-yellow-800 rounded-full border border-yellow-400 shadow disabled:opacity-50">
-            ☝️ I wish to speak
-          </button>
-        </>
+        <AttentionSelector
+          participants={participants.filter((p) => p.name !== me)}
+          onSelect={handleSelect}
+          hidden={panelHidden}
+          toggle={() => setPanelHidden(!panelHidden)}
+          selected={selectedTarget || ""}
+          raiseHand={raiseHand}
+          raiseHandMode={selectedTarget === me}
+          me={me}
+        />
       )}
 
       <p className="mt-6 text-sm text-gray-500 text-center max-w-sm">
