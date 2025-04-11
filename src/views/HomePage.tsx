@@ -44,7 +44,7 @@ export default function HomePage() {
       <footer className="mt-12 text-sm text-gray-400 text-center">
         A digital ritual by design. ✦ Built with love by{" "}
         <span className="text-gray-500 font-medium">Amit Abraham Dobry</span>.{" "}
-        <span className="inline-block">🌀</span> Version: {APP_VERSION}
+        <span className="inline-block">🌀</span> Version: 2.0
       </footer>
     </div>
   );
