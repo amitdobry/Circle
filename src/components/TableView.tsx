@@ -16,14 +16,15 @@ export default function TableView(): JSX.Element {
   const [pointerMap, setPointerMap] = useState<PointerMap>({});
   const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);
   const [panelHidden, setPanelHidden] = useState<boolean>(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  // const [cameraError, setCameraError] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const seatCount = participants.length;
   const radiusX = 300;
   const radiusY = 180;
   const positions: Record<string, { x: number; y: number }> = {};
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const participantsRef = useRef<Participant[]>([]);
+  // const videoRef = useRef<HTMLVideoElement>(null);
 
   const avatarMap: Record<string, string> = {
     elementalv2: process.env.PUBLIC_URL + "/avatars/avatar-elementalv2.png",
@@ -41,40 +42,37 @@ export default function TableView(): JSX.Element {
     babyv2: process.env.PUBLIC_URL + "/avatars/avatar-babyv2.png",
   };
 
-  useEffect(() => {
-    const requestCameraAccess = async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError("Camera API not supported in this environment.");
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-          audio: true,
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (err) {
-        console.error("Camera access error:", err);
-        setCameraError(
-          "Camera access denied or unavailable. Please allow camera permissions and reload the page."
-        );
-      }
-    };
+  // useEffect(() => {
+  //   const requestCameraAccess = async () => {
+  //     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  //       setCameraError("Camera API not supported in this environment.");
+  //       return;
+  //     }
+  //     try {
+  //       const stream = await navigator.mediaDevices.getUserMedia({
+  //         video: { facingMode: "user" },
+  //         audio: true,
+  //       });
+  //       if (videoRef.current) {
+  //         videoRef.current.srcObject = stream;
+  //       }
+  //     } catch (err) {
+  //       console.error("Camera access error:", err);
+  //       setCameraError(
+  //         "Camera access denied or unavailable. Please allow camera permissions and reload the page."
+  //       );
+  //     }
+  //   };
 
-    requestCameraAccess();
-  }, []);
+  //   requestCameraAccess();
+  // }, []);
 
   const joinedRef = useRef<boolean>(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (isParticipant && me && !joinedRef.current) {
-      socket.emit("joined-table", { name: me });
-      joinedRef.current = true;
-    }
-
-    socket.on("user-list", (userList: Participant[]) => {
+    socket.on("user-list", (userList) => {
+      participantsRef.current = userList;
       setParticipants(userList);
     });
 
@@ -86,7 +84,7 @@ export default function TableView(): JSX.Element {
     );
 
     socket.on("log-event", (msg: string) => {
-      setLogs((prev) => [...prev.slice(-4), msg]); // max 30 logs
+      setLogs((prev) => [...prev.slice(-4), msg]);
     });
 
     socket.on(
@@ -108,8 +106,13 @@ export default function TableView(): JSX.Element {
       setLiveSpeakerName(null);
     });
 
+    if (isParticipant && me && !joinedRef.current) {
+      socket.emit("joined-table", { name: me });
+      joinedRef.current = true;
+    }
+
     return () => {
-      const stillIn = participants.some((p) => p.name === me);
+      const stillIn = participantsRef.current.some((p) => p.name === me);
       if (stillIn) {
         socket.emit("leave", { name: me });
       }
@@ -120,7 +123,7 @@ export default function TableView(): JSX.Element {
       socket.off("live-speaker-cleared");
       socket.off("log-event");
     };
-  }, [me]);
+  }, [me, isParticipant]);
 
   const handleSelect = (id: string) => {
     setSelectedTarget(id);
