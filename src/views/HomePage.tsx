@@ -42,7 +42,9 @@ export default function HomePage() {
       </div>
 
       <footer className="mt-12 text-sm text-gray-400 text-center">
-        A digital ritual by design. ✦ Built with love. Version: {APP_VERSION}
+        A digital ritual by design. ✦ Built with love by{" "}
+        <span className="text-gray-500 font-medium">Amit Abraham Dobry</span>.{" "}
+        <span className="inline-block">🌀</span> Version: {APP_VERSION}
       </footer>
     </div>
   );
