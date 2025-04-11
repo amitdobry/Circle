@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { APP_VERSION } from "./../version";
 
+(window as any).APP_VERSION = APP_VERSION;
 export default function HomePage() {
   const navigate = useNavigate();
 
@@ -40,7 +42,7 @@ export default function HomePage() {
       </div>
 
       <footer className="mt-12 text-sm text-gray-400 text-center">
-        A digital ritual by design. ✦ Built with love.
+        A digital ritual by design. ✦ Built with love. Version: {APP_VERSION}
       </footer>
     </div>
   );
