@@ -26,18 +26,19 @@ export default function TableView(): JSX.Element {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const avatarMap: Record<string, string> = {
-    Elemental: process.env.PUBLIC_URL + "/avatars/avatar-elementalv2.png",
-    Monk: process.env.PUBLIC_URL + "/avatars/avatar-monkv2.png",
-    Ninja: process.env.PUBLIC_URL + "/avatars/avatar-ninjav2.png",
-    Pharaoh: process.env.PUBLIC_URL + "/avatars/avatar-pharaohv2.png",
-    Wolves: process.env.PUBLIC_URL + "/avatars/avatar-wolvesv2.png",
-    Pirate: process.env.PUBLIC_URL + "/avatars/avatar-piratev2.png",
-    Panda: process.env.PUBLIC_URL + "/avatars/avatar-pandav2.png",
-    Farmer: process.env.PUBLIC_URL + "/avatars/avatar-farmerv2.png",
-    TennisPlayer: process.env.PUBLIC_URL + "/avatars/avatar-tennisplayerv2.png",
-    Chipmunks: process.env.PUBLIC_URL + "/avatars/avatar-chipmunksv2.png",
-    BabyDragon: process.env.PUBLIC_URL + "/avatars/avatar-babydragonv2.png",
-    Baby: process.env.PUBLIC_URL + "/avatars/avatar-babyv2.png",
+    elementalv2: process.env.PUBLIC_URL + "/avatars/avatar-elementalv2.png",
+    monkv2: process.env.PUBLIC_URL + "/avatars/avatar-monkv2.png",
+    ninjav2: process.env.PUBLIC_URL + "/avatars/avatar-ninjav2.png",
+    pharaohv2: process.env.PUBLIC_URL + "/avatars/avatar-pharaohv2.png",
+    wolvesv2: process.env.PUBLIC_URL + "/avatars/avatar-wolvesv2.png",
+    piratev2: process.env.PUBLIC_URL + "/avatars/avatar-piratev2.png",
+    pandav2: process.env.PUBLIC_URL + "/avatars/avatar-pandav2.png",
+    farmerv2: process.env.PUBLIC_URL + "/avatars/avatar-farmerv2.png",
+    tennisPlayerv2:
+      process.env.PUBLIC_URL + "/avatars/avatar-tennisplayerv2.png",
+    chipmunksv2: process.env.PUBLIC_URL + "/avatars/avatar-chipmunksv2.png",
+    babyDragonv2: process.env.PUBLIC_URL + "/avatars/avatar-babydragonv2.png",
+    babyv2: process.env.PUBLIC_URL + "/avatars/avatar-babyv2.png",
   };
 
   useEffect(() => {
