@@ -31,7 +31,7 @@ export default function HomePage() {
       <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow max-w-2xl text-center text-gray-700">
         <h2 className="text-xl font-semibold mb-2">How It Works</h2>
         <p className="text-sm mb-1">
-          ✦ Join a circle as a listener or speaker.
+          ✦ Join a circle as an observer or listener/speaker.
         </p>
         <p className="text-sm mb-1">
           ✦ All must point to one for that voice to be heard.
@@ -44,7 +44,7 @@ export default function HomePage() {
       <footer className="mt-12 text-sm text-gray-400 text-center">
         A digital ritual by design. ✦ Built with love by{" "}
         <span className="text-gray-500 font-medium">Amit Abraham Dobry</span>.{" "}
-        <span className="inline-block">🌀</span> Version: 2.0
+        <span className="inline-block">🌀</span> Version: {APP_VERSION}
       </footer>
     </div>
   );
