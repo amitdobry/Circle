@@ -16,7 +16,7 @@ export default function NamePrompt() {
     socket.on("avatars", (list) => {
       const enriched = list.map((a: any) => ({
         ...a,
-        image: `${process.env.PUBLIC_URL}/avatars/avatar-${a.id}v2.png`,
+        image: `${process.env.PUBLIC_URL}/avatars/avatar-${a.id}.png`,
       }));
       setAvatars(enriched);
     });
