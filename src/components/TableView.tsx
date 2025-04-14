@@ -16,15 +16,16 @@ export default function TableView(): JSX.Element {
   const [pointerMap, setPointerMap] = useState<PointerMap>({});
   const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);
   const [panelHidden, setPanelHidden] = useState<boolean>(false);
-  // const [cameraError, setCameraError] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
-  const seatCount = participants.length;
-  const radiusX = 300;
-  const radiusY = 180;
-  const positions: Record<string, { x: number; y: number }> = {};
   const participantsRef = useRef<Participant[]>([]);
-  // const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [svgCenter, setSvgCenter] = useState({ x: 350, y: 250 });
+  const isMobile = window.innerWidth < 640;
+
+  const radiusX = isMobile ? 180 : 300;
+  const radiusY = isMobile ? 300 : 180;
+  const positions: Record<string, { x: number; y: number }> = {};
 
   const avatarMap: Record<string, string> = {
     Elemental: process.env.PUBLIC_URL + "/avatars/avatar-Elemental.png",
@@ -41,34 +42,21 @@ export default function TableView(): JSX.Element {
     Baby: process.env.PUBLIC_URL + "/avatars/avatar-Baby.png",
   };
 
-  // useEffect(() => {
-  //   const requestCameraAccess = async () => {
-  //     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-  //       setCameraError("Camera API not supported in this environment.");
-  //       return;
-  //     }
-  //     try {
-  //       const stream = await navigator.mediaDevices.getUserMedia({
-  //         video: { facingMode: "user" },
-  //         audio: true,
-  //       });
-  //       if (videoRef.current) {
-  //         videoRef.current.srcObject = stream;
-  //       }
-  //     } catch (err) {
-  //       console.error("Camera access error:", err);
-  //       setCameraError(
-  //         "Camera access denied or unavailable. Please allow camera permissions and reload the page."
-  //       );
-  //     }
-  //   };
+  useEffect(() => {
+    const updateCenter = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setSvgCenter({
+          x: rect.width / 2,
+          y: rect.height / 2,
+        });
+      }
+    };
+    updateCenter();
+    window.addEventListener("resize", updateCenter);
+    return () => window.removeEventListener("resize", updateCenter);
+  }, []);
 
-  //   requestCameraAccess();
-  // }, []);
-
-  const joinedRef = useRef<boolean>(false);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     socket.on("user-list", (userList) => {
       participantsRef.current = userList;
@@ -90,9 +78,7 @@ export default function TableView(): JSX.Element {
       "initial-pointer-map",
       (entries: { from: string; to: string }[]) => {
         const map: PointerMap = {};
-        for (const { from, to } of entries) {
-          map[from] = to;
-        }
+        for (const { from, to } of entries) map[from] = to;
         setPointerMap(map);
       }
     );
@@ -105,16 +91,17 @@ export default function TableView(): JSX.Element {
       setLiveSpeakerName(null);
     });
 
-    if (isParticipant && me && !joinedRef.current) {
+    if (
+      isParticipant &&
+      me &&
+      !participantsRef.current.some((p) => p.name === me)
+    ) {
       socket.emit("joined-table", { name: me });
-      joinedRef.current = true;
     }
 
     return () => {
       const stillIn = participantsRef.current.some((p) => p.name === me);
-      if (stillIn) {
-        socket.emit("leave", { name: me });
-      }
+      if (stillIn) socket.emit("leave", { name: me });
       socket.off("user-list");
       socket.off("update-pointing");
       socket.off("initial-pointer-map");
@@ -135,36 +122,29 @@ export default function TableView(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-center text-gray-800">
-      <h1 className="text-3xl font-bold mb-6">SoulCircle Table</h1>
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-between text-gray-800">
+      <h1 className="text-3xl font-bold mb-4 sm:mb-6 mt-3 text-center z-20">
+        SoulCircle Table
+      </h1>
 
-      <div className="relative w-[700px] h-[500px] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center">
-        <div className="absolute w-[280px] h-[160px] bg-white rounded-xl shadow-lg border border-gray-300 p-2 overflow-y-auto text-sm text-gray-700 space-y-1 z-10">
+      <div
+        ref={containerRef}
+        className="relative w-full max-w-[700px] aspect-[5/7] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center">
+        <div
+          className={`absolute z-10 p-2 rounded-xl shadow-md border border-gray-300 text-sm text-gray-700 space-y-1 bg-white overflow-y-auto transition-all
+            ${
+              isMobile
+                ? "bottom-55 left-1/2 transform -translate-x-1/2 w-[80%] h-[100px] text-xs opacity-90"
+                : "top-50 left-1/2 transform -translate-x-1/2 w-[280px] h-[160px]"
+            }`}>
           {logs.map((log, i) => (
             <div key={i}>{log}</div>
           ))}
         </div>
 
-        {/* <div className="absolute w-64 h-36 rounded-xl overflow-hidden shadow-lg border border-gray-300 z-10">
-          {cameraError ? (
-            <div className="w-full h-full flex items-center justify-center text-sm text-red-600 bg-white p-2 text-center">
-              {cameraError}
-            </div>
-          ) : (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted={liveSpeakerName !== me}
-              className={`w-full h-full object-cover transition-opacity duration-500 ${
-                liveSpeakerName === me ? "opacity-100" : "opacity-20"
-              }`}
-            />
-          )}
-        </div> */}
-
+        {/* Avatars */}
         {participants.map((user, i) => {
-          const angle = (i / seatCount) * 2 * Math.PI;
+          const angle = (i / participants.length) * 2 * Math.PI;
           const x = radiusX * Math.cos(angle);
           const y = radiusY * Math.sin(angle);
           const isMe = user.name === me;
@@ -175,11 +155,13 @@ export default function TableView(): JSX.Element {
           return (
             <div
               key={user.name}
-              className="absolute flex flex-col items-center text-center"
+              className="absolute flex flex-col items-center text-center z-10"
               style={{ transform: `translate(${x}px, ${y}px)` }}>
-              <div className="font-semibold text-sm mb-1">{user.name}</div>
+              <div className="font-semibold text-xs sm:text-sm mb-1 truncate max-w-[80px]">
+                {user.name}
+              </div>
               <div
-                className={`w-24 h-24 rounded-full overflow-hidden relative border-4 shadow-lg ${
+                className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden relative border-4 shadow-lg ${
                   isMe
                     ? "border-emerald-600 ring-4 ring-emerald-300"
                     : "border-white"
@@ -212,38 +194,41 @@ export default function TableView(): JSX.Element {
           );
         })}
 
-        {Object.entries(pointerMap).map(([from, to]) => {
-          if (!positions[from] || !positions[to] || from === to) return null;
-          return (
-            <svg
-              key={from}
-              className="absolute inset-0 pointer-events-none z-0"
-              width="100%"
-              height="100%">
-              <defs>
-                <marker
-                  id={`arrowhead-${from}`}
-                  markerWidth="10"
-                  markerHeight="7"
-                  refX="0"
-                  refY="3.5"
-                  orient="auto"
-                  fill="green">
-                  <polygon points="0 0, 10 3.5, 0 7" />
-                </marker>
-              </defs>
+        {/* Arrows */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+          <defs>
+            {Object.keys(pointerMap).map((from) => (
+              <marker
+                key={from}
+                id={`arrowhead-${from}`}
+                markerWidth="10"
+                markerHeight="7"
+                refX="0"
+                refY="3.5"
+                orient="auto"
+                fill="green">
+                <polygon points="0 0, 10 3.5, 0 7" />
+              </marker>
+            ))}
+          </defs>
+          {Object.entries(pointerMap).map(([from, to]) => {
+            if (!positions[from] || !positions[to] || from === to) return null;
+            return (
               <line
-                x1={positions[from].x + 350}
-                y1={positions[from].y + 250}
-                x2={positions[to].x + 350}
-                y2={positions[to].y + 250}
+                key={from}
+                x1={positions[from].x + svgCenter.x}
+                y1={positions[from].y + svgCenter.y}
+                x2={positions[to].x + svgCenter.x}
+                y2={positions[to].y + svgCenter.y}
                 stroke="green"
                 strokeWidth="2"
                 markerEnd={`url(#arrowhead-${from})`}
+                strokeDasharray="4"
+                className="animate-[dash_1.5s_linear_infinite]"
               />
-            </svg>
-          );
-        })}
+            );
+          })}
+        </svg>
       </div>
 
       {isParticipant && (

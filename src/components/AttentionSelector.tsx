@@ -36,7 +36,7 @@ function AttentionSelector({
     );
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-xl shadow-lg flex gap-3 flex-wrap justify-center max-w-md z-20">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white p-3 rounded-xl shadow-xl w-[95vw] max-w-lg flex flex-wrap gap-2 justify-center z-20">
       {participants.map((p) => (
         <button
           key={p.name}
@@ -63,7 +63,7 @@ function AttentionSelector({
 
       <button
         onClick={toggle}
-        className="ml-2 px-3 py-1 text-xs bg-rose-100 text-rose-500 rounded-full border border-rose-200">
+        className="px-3 py-1 text-xs bg-rose-100 text-rose-500 rounded-full border border-rose-200">
         Hide
       </button>
     </div>
