@@ -18,10 +18,12 @@ export default function TableView(): JSX.Element {
   const [panelHidden, setPanelHidden] = useState<boolean>(false);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [userInput, setUserInput] = useState<string>("");
   const participantsRef = useRef<Participant[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgCenter, setSvgCenter] = useState({ x: 350, y: 250 });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const isMeLive = liveSpeakerName === me;
 
   const avatarMap: Record<string, string> = {
     Elemental: process.env.PUBLIC_URL + "/avatars/avatar-Elemental.png",
@@ -37,6 +39,18 @@ export default function TableView(): JSX.Element {
     BabyDragon: process.env.PUBLIC_URL + "/avatars/avatar-BabyDragon.png",
     Baby: process.env.PUBLIC_URL + "/avatars/avatar-Baby.png",
   };
+
+  useEffect(() => {
+    socket.on("logBar:update", ({ text, userName }) => {
+      setUserInput(text);
+
+      console.log("logBar:update payload →", { text, userName });
+    });
+
+    return () => {
+      socket.off("logBar:update");
+    };
+  }, []);
 
   useEffect(() => {
     const updateCenter = () => {
@@ -127,6 +141,16 @@ export default function TableView(): JSX.Element {
     socket.emit("pointing", { from: me, to: me });
   };
 
+  const handleLogInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setUserInput(value);
+    console.log("sending:", me + value);
+    socket.emit("logBar:update", {
+      text: value,
+      userName: me,
+    });
+  };
+
   const radiusX = svgCenter.x * (isMobile ? 0.85 : 0.85);
   const radiusY = svgCenter.y * (isMobile ? 0.8 : 0.85);
   const positions: Record<string, { x: number; y: number }> = {};
@@ -140,10 +164,26 @@ export default function TableView(): JSX.Element {
       <div
         ref={containerRef}
         className="relative w-full max-w-[700px] aspect-[5/6] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center overflow-visible">
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 p-2 rounded-xl shadow-md border border-gray-300 text-sm text-gray-700 space-y-1 bg-white overflow-y-auto w-[60%] max-w-[280px] sm:w-[280px] h-[100px] sm:h-[160px] text-xs sm:text-sm opacity-95">
+        <div
+          ref={containerRef}
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 p-2 rounded-xl shadow-md border border-gray-300 text-sm text-gray-700 space-y-1 bg-white overflow-y-auto w-[60%] max-w-[280px] sm:w-[280px] h-[100px] sm:h-[160px] text-xs sm:text-sm opacity-95">
           {logs.map((log, i) => (
-            <div key={i}>{log}</div>
+            <div key={i} className="whitespace-pre-wrap">
+              {log}
+            </div>
           ))}
+          {isMeLive ? (
+            <textarea
+              value={userInput}
+              onChange={handleLogInput}
+              className="w-full bg-transparent outline-none resize-none text-sm"
+              rows={1}
+              style={{ lineHeight: "1.25rem", maxHeight: "6.5rem" }}
+              placeholder="Type here..."
+            />
+          ) : (
+            userInput && <div className="whitespace-pre-wrap">{userInput}</div>
+          )}
         </div>
 
         {participants.map((user, i) => {
