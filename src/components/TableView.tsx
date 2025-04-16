@@ -108,6 +108,15 @@ export default function TableView(): JSX.Element {
     };
   }, [me, isParticipant]);
 
+  useEffect(() => {
+    const handleUnload = () => {
+      socket.emit("leave", { name: me });
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [me]);
+
   const handleSelect = (id: string) => {
     setSelectedTarget(id);
     socket.emit("pointing", { from: me, to: id });
