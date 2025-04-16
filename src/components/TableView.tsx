@@ -21,11 +21,7 @@ export default function TableView(): JSX.Element {
   const participantsRef = useRef<Participant[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgCenter, setSvgCenter] = useState({ x: 350, y: 250 });
-  const isMobile = window.innerWidth < 640;
-
-  const radiusX = isMobile ? 180 : 300;
-  const radiusY = isMobile ? 300 : 180;
-  const positions: Record<string, { x: number; y: number }> = {};
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   const avatarMap: Record<string, string> = {
     Elemental: process.env.PUBLIC_URL + "/avatars/avatar-Elemental.png",
@@ -50,6 +46,7 @@ export default function TableView(): JSX.Element {
           x: rect.width / 2,
           y: rect.height / 2,
         });
+        setIsMobile(window.innerWidth < 640);
       }
     };
     updateCenter();
@@ -121,30 +118,27 @@ export default function TableView(): JSX.Element {
     socket.emit("pointing", { from: me, to: me });
   };
 
+  const radiusX = svgCenter.x * (isMobile ? 0.85 : 0.85);
+  const radiusY = svgCenter.y * (isMobile ? 0.8 : 0.85);
+  const positions: Record<string, { x: number; y: number }> = {};
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-between text-gray-800">
-      <h1 className="text-3xl font-bold mb-4 sm:mb-6 mt-3 text-center z-20">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-start text-gray-800">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 mt-2 sm:mt-3 text-center z-20">
         SoulCircle Table
       </h1>
-
+      <span className="block h-2 sm:h-4"></span>
       <div
         ref={containerRef}
-        className="relative w-full max-w-[700px] aspect-[5/7] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center">
-        <div
-          className={`absolute z-10 p-2 rounded-xl shadow-md border border-gray-300 text-sm text-gray-700 space-y-1 bg-white overflow-y-auto transition-all
-            ${
-              isMobile
-                ? "bottom-55 left-1/2 transform -translate-x-1/2 w-[80%] h-[100px] text-xs opacity-90"
-                : "top-50 left-1/2 transform -translate-x-1/2 w-[280px] h-[160px]"
-            }`}>
+        className="relative w-full max-w-[700px] aspect-[5/6] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center overflow-visible">
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 p-2 rounded-xl shadow-md border border-gray-300 text-sm text-gray-700 space-y-1 bg-white overflow-y-auto w-[60%] max-w-[280px] sm:w-[280px] h-[100px] sm:h-[160px] text-xs sm:text-sm opacity-95">
           {logs.map((log, i) => (
             <div key={i}>{log}</div>
           ))}
         </div>
 
-        {/* Avatars */}
         {participants.map((user, i) => {
-          const angle = (i / participants.length) * 2 * Math.PI;
+          const angle = (i / participants.length) * 2 * Math.PI + Math.PI / 2;
           const x = radiusX * Math.cos(angle);
           const y = radiusY * Math.sin(angle);
           const isMe = user.name === me;
@@ -155,13 +149,13 @@ export default function TableView(): JSX.Element {
           return (
             <div
               key={user.name}
-              className="absolute flex flex-col items-center text-center z-10"
+              className="absolute flex flex-col items-center text-center z-10 transition-transform"
               style={{ transform: `translate(${x}px, ${y}px)` }}>
               <div className="font-semibold text-xs sm:text-sm mb-1 truncate max-w-[80px]">
                 {user.name}
               </div>
               <div
-                className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden relative border-4 shadow-lg ${
+                className={`w-14 h-14 sm:w-24 sm:h-24 rounded-full overflow-hidden relative border-4 shadow-lg ${
                   isMe
                     ? "border-emerald-600 ring-4 ring-emerald-300"
                     : "border-white"
@@ -175,7 +169,7 @@ export default function TableView(): JSX.Element {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex items-center gap-1 mt-1 text-xs">
+              <div className="flex items-center gap-1 mt-1 text-xs whitespace-nowrap">
                 {isPointingAtSelf && (
                   <div className="text-yellow-500 text-lg">☝️</div>
                 )}
@@ -194,7 +188,6 @@ export default function TableView(): JSX.Element {
           );
         })}
 
-        {/* Arrows */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
           <defs>
             {Object.keys(pointerMap).map((from) => (
@@ -231,20 +224,25 @@ export default function TableView(): JSX.Element {
         </svg>
       </div>
 
-      {isParticipant && (
-        <AttentionSelector
-          participants={participants.filter((p) => p.name !== me)}
-          onSelect={handleSelect}
-          hidden={panelHidden}
-          toggle={() => setPanelHidden(!panelHidden)}
-          selected={selectedTarget || ""}
-          raiseHand={raiseHand}
-          raiseHandMode={selectedTarget === me}
-          me={me}
-        />
-      )}
+      <div className="w-full px-2 sm:px-0 mt-12 sm:mt-12">
+        <div className="max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2">
+          {isParticipant && (
+            <AttentionSelector
+              participants={participants.filter((p) => p.name !== me)}
+              onSelect={handleSelect}
+              hidden={panelHidden}
+              toggle={() => setPanelHidden(!panelHidden)}
+              selected={selectedTarget || ""}
+              raiseHand={raiseHand}
+              raiseHandMode={selectedTarget === me}
+              me={me}
+            />
+          )}
+        </div>
+      </div>
 
-      <p className="mt-6 text-sm text-gray-500 text-center max-w-sm">
+      {/* <p className="mt-6 text-sm text-gray-500 text-center max-w-sm"> */}
+      <p className="mt-8 mb-12 text-sm text-gray-500 text-center max-w-sm">
         Choose one to listen to. When all align, a voice is born.
       </p>
     </div>

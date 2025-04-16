@@ -36,7 +36,9 @@ function AttentionSelector({
     );
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white p-3 rounded-xl shadow-xl w-[95vw] max-w-lg flex flex-wrap gap-2 justify-center z-20">
+    <div className="w-full flex flex-wrap gap-2 justify-center">
+      {/* return ( */}
+      {/* <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-3 rounded-xl shadow-xl w-[95vw] max-w-lg flex flex-wrap gap-2 justify-center z-20"> */}
       {participants.map((p) => (
         <button
           key={p.name}

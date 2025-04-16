@@ -33,7 +33,6 @@ export default function HomePage() {
         <p className="text-sm mb-1">
           ✦ Join a circle as an observer or participant.
         </p>
-
         <p className="text-sm mb-1">
           ✦ All must point to one for that voice to be heard.
         </p>
