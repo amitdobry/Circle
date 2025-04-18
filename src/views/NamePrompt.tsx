@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import socket from "../socket/index"; // update path as needed
-import { AvatarInfo } from "../types/avatar"; // ✅ Removed .ts
+import socket from "../socket/index";
+import { AvatarInfo } from "../types/avatar";
 
 export default function NamePrompt() {
   const navigate = useNavigate();
@@ -9,6 +9,9 @@ export default function NamePrompt() {
   const [name, setName] = useState("");
   const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null);
   const [avatars, setAvatars] = useState<AvatarInfo[]>([]);
+
+  const [showError, setShowError] = useState(false); // <-- NEW state for toast
+  const [errorMessage, setErrorMessage] = useState(""); // <-- NEW!
 
   // Fetch avatars on load
   useEffect(() => {
@@ -27,15 +30,30 @@ export default function NamePrompt() {
   }, []);
 
   const handleJoin = () => {
-    if (!name || !selectedAvatarId) return;
+    if (!name || !selectedAvatarId) {
+      // ❌ Missing fields → show warning toast
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
+      return;
+    }
 
-    socket.emit("join", { name, avatarId: selectedAvatarId });
-
-    navigate(`/room?mode=participant&name=${encodeURIComponent(name)}`);
+    // 🔥 Ask server for permission
+    socket.emit("request-join", { name, avatarId: selectedAvatarId });
   };
 
+  socket.once("join-approved", () => {
+    navigate(`/room?mode=participant&name=${encodeURIComponent(name)}`);
+  });
+
+  socket.once("join-rejected", ({ reason }) => {
+    console.log("Join rejected:", reason);
+    setErrorMessage(reason || "Unable to join. Please try again.");
+    setShowError(true);
+    setTimeout(() => setShowError(false), 3000); // Hide after 3 sec
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-rose-100 text-gray-800 flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-rose-100 text-gray-800 flex flex-col items-center justify-center px-4 py-12 relative">
       <h1 className="text-3xl font-bold mb-4">Join the Circle</h1>
 
       <input
@@ -79,10 +97,16 @@ export default function NamePrompt() {
 
       <button
         onClick={handleJoin}
-        disabled={!name || !selectedAvatarId}
-        className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-lg hover:bg-emerald-700 disabled:opacity-50">
+        className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-lg hover:bg-emerald-700">
         Join Circle
       </button>
+
+      {/* --- Toast Message --- */}
+      {showError && (
+        <div className="fixed bottom-20 bg-yellow-300 text-yellow-900 px-12 py-3 rounded-lg shadow-lg text-center text-sm animate-bounce">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 }
