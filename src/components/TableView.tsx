@@ -56,7 +56,7 @@ export default function TableView(): JSX.Element {
     return () => {
       socket.off("logBar:update");
     };
-  }, []);
+  }, [me]);
 
   useEffect(() => {
     const updateCenter = () => {
