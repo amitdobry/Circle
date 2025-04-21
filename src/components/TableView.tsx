@@ -3,6 +3,8 @@ import { useLocation } from "react-router-dom";
 import socket from "../socket/index";
 import AttentionSelector from "./AttentionSelector";
 import { Participant } from "../types/participant";
+import ListenerSyncPanel from "./ListenersPanel";
+import SpeakerPanel from "./SpeakersPanel";
 
 type PointerMap = Record<string, string>;
 
@@ -23,6 +25,7 @@ export default function TableView(): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgCenter, setSvgCenter] = useState({ x: 350, y: 250 });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [isSyncActive, setIsSyncActive] = useState(false);
   const isMeLive = liveSpeakerName === me;
 
   const avatarMap: Record<string, string> = {
@@ -42,6 +45,9 @@ export default function TableView(): JSX.Element {
 
   useEffect(() => {
     socket.on("logBar:update", ({ text, userName }) => {
+      if (userName === me) {
+        return;
+      }
       setUserInput(text);
 
       console.log("logBar:update payload →", { text, userName });
@@ -96,10 +102,12 @@ export default function TableView(): JSX.Element {
 
     socket.on("live-speaker", ({ name }: { name: string }) => {
       setLiveSpeakerName(name);
+      setIsSyncActive(true);
     });
 
     socket.on("live-speaker-cleared", () => {
       setLiveSpeakerName(null);
+      setIsSyncActive(false);
     });
 
     if (
@@ -149,6 +157,11 @@ export default function TableView(): JSX.Element {
       text: value,
       userName: me,
     });
+  };
+
+  const handleListenerSelect = (mode: "ear" | "brain" | "mouth") => {
+    console.log("Listener selected mode:", mode);
+    socket.emit("listener-mode", { name: me, mode });
   };
 
   const radiusX = svgCenter.x * (isMobile ? 0.85 : 0.85);
@@ -275,18 +288,33 @@ export default function TableView(): JSX.Element {
 
       <div className="w-full px-2 sm:px-0 mt-12 sm:mt-12">
         <div className="max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2">
-          {isParticipant && (
-            <AttentionSelector
-              participants={participants.filter((p) => p.name !== me)}
-              onSelect={handleSelect}
-              hidden={panelHidden}
-              toggle={() => setPanelHidden(!panelHidden)}
-              selected={selectedTarget || ""}
-              raiseHand={raiseHand}
-              raiseHandMode={selectedTarget === me}
-              me={me}
-            />
-          )}
+          {isParticipant &&
+            (isSyncActive ? (
+              liveSpeakerName === me ? (
+                <SpeakerPanel
+                  hidden={panelHidden}
+                  toggle={() => setPanelHidden(!panelHidden)}
+                />
+              ) : (
+                <ListenerSyncPanel
+                  hidden={panelHidden}
+                  toggle={() => setPanelHidden(!panelHidden)}
+                  onSelect={handleListenerSelect}
+                  speakerName={liveSpeakerName || "Unknown"} // ✨ new prop
+                />
+              )
+            ) : (
+              <AttentionSelector
+                participants={participants.filter((p) => p.name !== me)}
+                onSelect={handleSelect}
+                hidden={panelHidden}
+                toggle={() => setPanelHidden(!panelHidden)}
+                selected={selectedTarget || ""}
+                raiseHand={raiseHand}
+                raiseHandMode={selectedTarget === me}
+                me={me}
+              />
+            ))}
         </div>
       </div>
 

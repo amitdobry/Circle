@@ -51,18 +51,16 @@ function AttentionSelector({
           {p.name}
         </button>
       ))}
-
       <button
         onClick={raiseHand}
         disabled={raiseHandMode}
-        className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+        className={`px-6 py-3 rounded-full text-base font-semibold border transition-all duration-200 ${
           raiseHandMode
-            ? "bg-yellow-200 text-yellow-600 border-yellow-300 opacity-60"
-            : "bg-yellow-300 text-yellow-800 border-yellow-400 hover:bg-yellow-400"
+            ? "bg-indigo-200 text-indigo-600 border-indigo-300 opacity-70 cursor-not-allowed"
+            : "bg-indigo-400 text-white border-indigo-500 hover:bg-indigo-500 hover:shadow-md hover:scale-105"
         }`}>
-        ☝️ I wish to speak
+        ✨ Ready to Glow
       </button>
-
       <button
         onClick={toggle}
         className="px-3 py-1 text-xs bg-rose-100 text-rose-500 rounded-full border border-rose-200">
