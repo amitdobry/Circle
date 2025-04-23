@@ -84,6 +84,9 @@ export default function TableView(): JSX.Element {
       "update-pointing",
       ({ from, to }: { from: string; to: string }) => {
         setPointerMap((prev) => ({ ...prev, [from]: to }));
+        if (from === me) {
+          setSelectedTarget(to); // Keeps UI logic synced
+        }
       }
     );
 
@@ -162,6 +165,16 @@ export default function TableView(): JSX.Element {
   const handleListenerSelect = (mode: "ear" | "brain" | "mouth") => {
     console.log("Listener selected mode:", mode);
     socket.emit("listener-mode", { name: me, mode });
+  };
+
+  const emitListenerAction = (payload: {
+    type: "ear" | "brain" | "mouth";
+    subType?: string;
+  }) => {
+    socket.emit("ListenerEmits", {
+      name: me, // replace with your identity var
+      ...payload,
+    });
   };
 
   const radiusX = svgCenter.x * (isMobile ? 0.85 : 0.85);
@@ -297,6 +310,7 @@ export default function TableView(): JSX.Element {
                 />
               ) : (
                 <ListenerSyncPanel
+                  emitListenerAction={emitListenerAction}
                   hidden={panelHidden}
                   toggle={() => setPanelHidden(!panelHidden)}
                   onSelect={handleListenerSelect}

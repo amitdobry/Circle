@@ -5,6 +5,10 @@ type ListenerSyncPanelProps = {
   toggle: () => void;
   onSelect: (mode: "ear" | "brain" | "mouth") => void;
   speakerName: string;
+  emitListenerAction: (payload: {
+    type: "ear" | "brain" | "mouth";
+    subType?: string;
+  }) => void;
 };
 
 function ListenerSyncPanel({
@@ -12,6 +16,7 @@ function ListenerSyncPanel({
   toggle,
   onSelect,
   speakerName,
+  emitListenerAction,
 }: ListenerSyncPanelProps) {
   const [reflecting, setReflecting] = useState(false);
   const [thinking, setThinking] = useState(false);
@@ -84,15 +89,21 @@ function ListenerSyncPanel({
       {/* Sub-options */}
       {reflecting && (
         <div className="flex flex-wrap gap-2 justify-center mt-2 transition-all">
-          <button className="px-4 py-2 rounded-full text-sm bg-emerald-100 text-emerald-700 border border-emerald-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() => emitListenerAction({ type: "ear", subType: "001" })}
+            className="px-4 py-2 rounded-full text-sm bg-emerald-100 text-emerald-700 border border-emerald-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             🤝 I feel you
           </button>
 
-          <button className="px-4 py-2 rounded-full text-sm bg-amber-100 text-amber-700 border border-amber-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() => emitListenerAction({ type: "ear", subType: "002" })}
+            className="px-4 py-2 rounded-full text-sm bg-amber-100 text-amber-700 border border-amber-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             🤔 I'm confused
           </button>
 
-          <button className="px-4 py-2 rounded-full text-sm bg-rose-100 text-rose-700 border border-rose-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() => emitListenerAction({ type: "ear", subType: "003" })}
+            className="px-4 py-2 rounded-full text-sm bg-rose-100 text-rose-700 border border-rose-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             😕 Not feeling it
           </button>
         </div>
@@ -100,15 +111,27 @@ function ListenerSyncPanel({
 
       {thinking && (
         <div className="flex flex-wrap gap-2 justify-center mt-2 transition-all">
-          <button className="px-4 py-2 rounded-full text-sm bg-blue-100 text-blue-700 border border-blue-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() =>
+              emitListenerAction({ type: "brain", subType: "101" })
+            }
+            className="px-4 py-2 rounded-full text-sm bg-blue-100 text-blue-700 border border-blue-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             🔄 Processing
           </button>
 
-          <button className="px-4 py-2 rounded-full text-sm bg-sky-100 text-sky-700 border border-sky-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() =>
+              emitListenerAction({ type: "brain", subType: "102" })
+            }
+            className="px-4 py-2 rounded-full text-sm bg-sky-100 text-sky-700 border border-sky-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             💭 Forming a thought
           </button>
 
-          <button className="px-4 py-2 rounded-full text-sm bg-indigo-100 text-indigo-700 border border-indigo-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() =>
+              emitListenerAction({ type: "brain", subType: "103" })
+            }
+            className="px-4 py-2 rounded-full text-sm bg-indigo-100 text-indigo-700 border border-indigo-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             🕰️ Need a moment
           </button>
         </div>
@@ -116,15 +139,27 @@ function ListenerSyncPanel({
 
       {interrupting && (
         <div className="flex flex-wrap gap-2 justify-center mt-2 transition-all">
-          <button className="px-4 py-2 rounded-full text-sm bg-orange-100 text-orange-700 border border-orange-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() =>
+              emitListenerAction({ type: "mouth", subType: "201" })
+            }
+            className="px-4 py-2 rounded-full text-sm bg-orange-100 text-orange-700 border border-orange-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             ➕ Add on
           </button>
 
-          <button className="px-4 py-2 rounded-full text-sm bg-violet-100 text-violet-700 border border-violet-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() =>
+              emitListenerAction({ type: "mouth", subType: "202" })
+            }
+            className="px-4 py-2 rounded-full text-sm bg-violet-100 text-violet-700 border border-violet-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             ❓ Clarify
           </button>
 
-          <button className="px-4 py-2 rounded-full text-sm bg-rose-200 text-rose-700 border border-rose-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
+          <button
+            onClick={() =>
+              emitListenerAction({ type: "mouth", subType: "203" })
+            }
+            className="px-4 py-2 rounded-full text-sm bg-rose-200 text-rose-700 border border-rose-300 transition-all duration-200 hover:brightness-110 hover:shadow-md hover:scale-105">
             ✖️ Disagree
           </button>
         </div>

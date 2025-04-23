@@ -59,7 +59,7 @@ function AttentionSelector({
             ? "bg-indigo-200 text-indigo-600 border-indigo-300 opacity-70 cursor-not-allowed"
             : "bg-indigo-400 text-white border-indigo-500 hover:bg-indigo-500 hover:shadow-md hover:scale-105"
         }`}>
-        ✨ Ready to Glow
+        {raiseHandMode ? "Glow Requested ✨" : "✨ Ready to Glow"}
       </button>
       <button
         onClick={toggle}
