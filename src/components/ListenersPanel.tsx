@@ -1,16 +1,14 @@
 import React, { useState } from "react";
 import GestureButtonGroup from "./ListenerButtons/GestureButtonGroup";
 import { useGestureButtons } from "./ListenerButtons/useGestureButtons";
+import { GestureButton } from "../types/gestureButtons";
 
 type ListenerSyncPanelProps = {
   hidden: boolean;
   toggle: () => void;
   onSelect: (mode: "ear" | "brain" | "mouth") => void;
   speakerName: string;
-  emitListenerAction: (payload: {
-    type: "ear" | "brain" | "mouth";
-    subType?: string;
-  }) => void;
+  emitListenerAction: (payload: GestureButton) => void;
 };
 
 function ListenerSyncPanel({

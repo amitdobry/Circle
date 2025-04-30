@@ -5,6 +5,7 @@ import AttentionSelector from "./AttentionSelector";
 import { Participant } from "../types/participant";
 import ListenerSyncPanel from "./ListenersPanel";
 import SpeakerPanel from "./SpeakersPanel";
+import { GestureButton } from "../types/gestureButtons";
 
 type PointerMap = Record<string, string>;
 
@@ -113,14 +114,6 @@ export default function TableView(): JSX.Element {
       setIsSyncActive(false);
     });
 
-    if (
-      isParticipant &&
-      me &&
-      !participantsRef.current.some((p) => p.name === me)
-    ) {
-      socket.emit("joined-table", { name: me });
-    }
-
     return () => {
       const stillIn = participantsRef.current.some((p) => p.name === me);
       if (stillIn) socket.emit("leave", { name: me });
@@ -133,6 +126,18 @@ export default function TableView(): JSX.Element {
     };
   }, [me, isParticipant]);
 
+  const hasJoined = useRef(false);
+
+  useEffect(() => {
+    if (!hasJoined.current && isParticipant && me) {
+      const alreadyJoined = participants.some((p) => p.name === me);
+      if (!alreadyJoined) {
+        socket.emit("joined-table", { name: me });
+        hasJoined.current = true;
+        console.log("[Client] ✅ Emitted joined-table once:", me);
+      }
+    }
+  }, [participants, isParticipant, me]);
   useEffect(() => {
     const handleUnload = () => {
       socket.emit("leave", { name: me });
@@ -167,13 +172,22 @@ export default function TableView(): JSX.Element {
     socket.emit("listener-mode", { name: me, mode });
   };
 
-  const emitListenerAction = (payload: {
-    type: "ear" | "brain" | "mouth";
-    subType?: string;
-  }) => {
-    socket.emit("ListenerEmits", {
-      name: me, // replace with your identity var
-      ...payload,
+  const emitListenerAction = (button: GestureButton) => {
+    const { type, subType, actionType } = button;
+    const from = me;
+
+    console.log("[Client] Emitting listenerEmits:", {
+      name: from,
+      type,
+      subType,
+      actionType,
+    }); // 💥 Add this BEFORE emitting!
+
+    socket.emit("listenerEmits", {
+      name: from,
+      type,
+      subType,
+      actionType,
     });
   };
 
