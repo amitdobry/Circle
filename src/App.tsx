@@ -22,8 +22,19 @@ function App(): JSX.Element {
         border-sky-300 bg-indigo-100 text-indigo-700 border border-indigo-300
         bg-orange-100 text-orange-700 border border-orange-300 bg-violet-100
         text-violet-700 border border-violet-300 bg-rose-200 text-rose-700
-        border border-rose-300 transition-all duration-200 hover:brightness-110
-        hover:shadow-md hover:scale-105
+        border border-rose-300 bg-indigo-400 text-white border-indigo-500
+        hover:bg-indigo-500 hover:shadow-md hover:scale-105 transition-all
+        duration-200 hover:brightness-110 px-6 py-3 rounded-full text-base
+        font-semibold border bg-rose-400 text-white border-rose-500
+        hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300
+        transition-all duration-150 hover:shadow-inner px-6 py-3 rounded-full
+        text-base font-semibold border bg-rose-400 text-white border-rose-500
+        hover:bg-gray-100 hover:text-gray-700 hover:border-gray-300 shadow-sm
+        transition-colors duration-150 px-6 py-3 rounded-full text-base
+        font-semibold border bg-gray-100 text-gray-600 border-gray-300
+        hover:bg-gray-200 transition px-6 py-3 rounded-full text-base
+        font-semibold border bg-emerald-500 text-white border-emerald-600
+        hover:bg-emerald-600 transition
       </div>
 
       {/* 👇 Your actual App Router */}

@@ -6,6 +6,7 @@ import { Participant } from "../types/participant";
 import ListenerSyncPanel from "./ListenersPanel";
 import SpeakerPanel from "./SpeakersPanel";
 import { GestureButton } from "../types/gestureButtons";
+import SoulCirclePanel from "./SoulCirclePanel";
 
 type PointerMap = Record<string, string>;
 
@@ -27,6 +28,12 @@ export default function TableView(): JSX.Element {
   const [svgCenter, setSvgCenter] = useState({ x: 350, y: 250 });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const [isSyncActive, setIsSyncActive] = useState(false);
+  const [prompt, setPrompt] = useState<{
+    icon: string;
+    message: string;
+    actions: { label: string; onClick: () => void }[];
+  } | null>(null);
+
   const isMeLive = liveSpeakerName === me;
 
   const avatarMap: Record<string, string> = {
@@ -114,6 +121,39 @@ export default function TableView(): JSX.Element {
       setIsSyncActive(false);
     });
 
+    socket.on("mic-dropped", ({ name }) => {
+      if (name === me) return; // 🛡️ don't prompt the dropper
+
+      showPrompt({
+        icon: "🎤",
+        message: `${name} dropped the mic. Pick it up?`,
+        actions: [
+          {
+            label: "Raise Hand",
+            onClick: () => socket.emit("pointing", { from: me, to: me }),
+          },
+          {
+            label: "Not now",
+            onClick: () => {
+              // optional: emit something or just close
+            },
+          },
+        ],
+      });
+    });
+
+    function showPrompt({
+      icon,
+      message,
+      actions,
+    }: {
+      icon: string;
+      message: string;
+      actions: { label: string; onClick: () => void }[];
+    }) {
+      setPrompt({ icon, message, actions });
+    }
+
     return () => {
       const stillIn = participantsRef.current.some((p) => p.name === me);
       if (stillIn) socket.emit("leave", { name: me });
@@ -176,14 +216,14 @@ export default function TableView(): JSX.Element {
     const { type, subType, actionType } = button;
     const from = me;
 
-    console.log("[Client] Emitting listenerEmits:", {
+    console.log("[Client] Emitting clientEmits:", {
       name: from,
       type,
       subType,
       actionType,
     }); // 💥 Add this BEFORE emitting!
 
-    socket.emit("listenerEmits", {
+    socket.emit("clientEmits", {
       name: from,
       type,
       subType,
@@ -318,33 +358,52 @@ export default function TableView(): JSX.Element {
           {isParticipant &&
             (isSyncActive ? (
               liveSpeakerName === me ? (
-                <SpeakerPanel
-                  hidden={panelHidden}
-                  toggle={() => setPanelHidden(!panelHidden)}
-                />
+                <SoulCirclePanel me={me} />
               ) : (
-                <ListenerSyncPanel
-                  emitListenerAction={emitListenerAction}
-                  hidden={panelHidden}
-                  toggle={() => setPanelHidden(!panelHidden)}
-                  onSelect={handleListenerSelect}
-                  speakerName={liveSpeakerName || "Unknown"} // ✨ new prop
-                />
+                // <ListenerSyncPanel
+                //   emitListenerAction={emitListenerAction}
+                //   hidden={panelHidden}
+                //   toggle={() => setPanelHidden(!panelHidden)}
+                //   onSelect={handleListenerSelect}
+                //   speakerName={liveSpeakerName || "Unknown"} // ✨ new prop
+                // />
+                <SoulCirclePanel me={me} />
               )
             ) : (
-              <AttentionSelector
-                participants={participants.filter((p) => p.name !== me)}
-                onSelect={handleSelect}
-                hidden={panelHidden}
-                toggle={() => setPanelHidden(!panelHidden)}
-                selected={selectedTarget || ""}
-                raiseHand={raiseHand}
-                raiseHandMode={selectedTarget === me}
-                me={me}
-              />
+              // <AttentionSelector
+              //   participants={participants.filter((p) => p.name !== me)}
+              //   onSelect={handleSelect}
+              //   hidden={panelHidden}
+              //   toggle={() => setPanelHidden(!panelHidden)}
+              //   selected={selectedTarget || ""}
+              //   raiseHand={raiseHand}
+              //   raiseHandMode={selectedTarget === me}
+              //   me={me}
+              // />
+              <SoulCirclePanel me={me} />
             ))}
         </div>
       </div>
+
+      {prompt && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-xl border border-gray-300 px-4 py-3 z-50 max-w-sm w-full text-center">
+          <div className="text-xl mb-2">{prompt.icon}</div>
+          <div className="text-sm text-gray-800 mb-3">{prompt.message}</div>
+          <div className="flex justify-center gap-2">
+            {prompt.actions.map((action, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  action.onClick();
+                  setPrompt(null); // auto-dismiss on click
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 text-sm rounded">
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* <p className="mt-6 text-sm text-gray-500 text-center max-w-sm"> */}
       <p className="mt-8 mb-12 text-sm text-gray-500 text-center max-w-sm">
