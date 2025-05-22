@@ -35,7 +35,7 @@ export default function SoulCirclePanel({ me }: Props) {
       socket.off("live-speaker", refresh);
       socket.off("initial-pointer-map", refresh);
     };
-  }, [me]);
+  }, [fetchPanelLayout, me]);
 
   // const panelConfigTest = testPanel; // 🧪 skip socket for now
   // const panelConfigTest = testPanelAttention; // 🧪 skip socket for now
