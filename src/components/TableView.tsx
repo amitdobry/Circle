@@ -5,7 +5,7 @@ import socket from "../socket/index";
 import { Participant } from "../types/participant";
 // import ListenerSyncPanel from "./ListenersPanel";
 // import SpeakerPanel from "./SpeakersPanel";
-import { GestureButton } from "../types/gestureButtons";
+// import { GestureButton } from "../types/gestureButtons";
 import SoulCirclePanel from "./SoulCirclePanel";
 
 type PointerMap = Record<string, string>;

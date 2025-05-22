@@ -13,7 +13,7 @@ export default function SoulCirclePanel({ me }: Props) {
 
   useEffect(() => {
     fetchPanelLayout(); // on mount
-  }, []);
+  }, [fetchPanelLayout]);
 
   // 🔥 Listen for table updates and re-fetch config when needed
   useEffect(() => {
