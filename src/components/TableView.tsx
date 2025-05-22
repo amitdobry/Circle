@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, JSX } from "react";
 import { useLocation } from "react-router-dom";
 import socket from "../socket/index";
-import AttentionSelector from "./AttentionSelector";
+// import AttentionSelector from "./AttentionSelector";
 import { Participant } from "../types/participant";
-import ListenerSyncPanel from "./ListenersPanel";
-import SpeakerPanel from "./SpeakersPanel";
+// import ListenerSyncPanel from "./ListenersPanel";
+// import SpeakerPanel from "./SpeakersPanel";
 import { GestureButton } from "../types/gestureButtons";
 import SoulCirclePanel from "./SoulCirclePanel";
 
@@ -19,8 +19,8 @@ export default function TableView(): JSX.Element {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [pointerMap, setPointerMap] = useState<PointerMap>({});
   const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);
-  const [panelHidden, setPanelHidden] = useState<boolean>(false);
-  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
+  // const [panelHidden, setPanelHidden] = useState<boolean>(false);
+  // const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [userInput, setUserInput] = useState<string>("");
   const participantsRef = useRef<Participant[]>([]);
@@ -93,7 +93,7 @@ export default function TableView(): JSX.Element {
       ({ from, to }: { from: string; to: string }) => {
         setPointerMap((prev) => ({ ...prev, [from]: to }));
         if (from === me) {
-          setSelectedTarget(to); // Keeps UI logic synced
+          // setSelectedTarget(to); // Keeps UI logic synced
         }
       }
     );
@@ -187,15 +187,15 @@ export default function TableView(): JSX.Element {
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [me]);
 
-  const handleSelect = (id: string) => {
-    setSelectedTarget(id);
-    socket.emit("pointing", { from: me, to: id });
-  };
+  // const handleSelect = (id: string) => {
+  //   // setSelectedTarget(id);
+  //   socket.emit("pointing", { from: me, to: id });
+  // };
 
-  const raiseHand = () => {
-    setSelectedTarget(me);
-    socket.emit("pointing", { from: me, to: me });
-  };
+  // const raiseHand = () => {
+  //   // setSelectedTarget(me);
+  //   socket.emit("pointing", { from: me, to: me });
+  // };
 
   const handleLogInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -207,29 +207,29 @@ export default function TableView(): JSX.Element {
     });
   };
 
-  const handleListenerSelect = (mode: "ear" | "brain" | "mouth") => {
-    console.log("Listener selected mode:", mode);
-    socket.emit("listener-mode", { name: me, mode });
-  };
+  // const handleListenerSelect = (mode: "ear" | "brain" | "mouth") => {
+  //   console.log("Listener selected mode:", mode);
+  //   socket.emit("listener-mode", { name: me, mode });
+  // };
 
-  const emitListenerAction = (button: GestureButton) => {
-    const { type, subType, actionType } = button;
-    const from = me;
+  // const emitListenerAction = (button: GestureButton) => {
+  //   const { type, subType, actionType } = button;
+  //   const from = me;
 
-    console.log("[Client] Emitting clientEmits:", {
-      name: from,
-      type,
-      subType,
-      actionType,
-    }); // 💥 Add this BEFORE emitting!
+  //   console.log("[Client] Emitting clientEmits:", {
+  //     name: from,
+  //     type,
+  //     subType,
+  //     actionType,
+  //   }); // 💥 Add this BEFORE emitting!
 
-    socket.emit("clientEmits", {
-      name: from,
-      type,
-      subType,
-      actionType,
-    });
-  };
+  //   socket.emit("clientEmits", {
+  //     name: from,
+  //     type,
+  //     subType,
+  //     actionType,
+  //   });
+  // };
 
   const radiusX = svgCenter.x * (isMobile ? 0.85 : 0.85);
   const radiusY = svgCenter.y * (isMobile ? 0.8 : 0.85);
