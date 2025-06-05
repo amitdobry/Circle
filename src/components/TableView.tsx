@@ -155,7 +155,7 @@ export default function TableView(): JSX.Element {
     }
 
     return () => {
-      const stillIn = participantsRef.current.some((p) => p.name === me);
+      // const stillIn = participantsRef.current.some((p) => p.name === me);
       // if (stillIn) socket.emit("leave", { name: me });
       socket.off("user-list");
       socket.off("update-pointing");
