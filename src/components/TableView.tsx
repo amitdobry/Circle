@@ -156,7 +156,7 @@ export default function TableView(): JSX.Element {
 
     return () => {
       const stillIn = participantsRef.current.some((p) => p.name === me);
-      if (stillIn) socket.emit("leave", { name: me });
+      // if (stillIn) socket.emit("leave", { name: me });
       socket.off("user-list");
       socket.off("update-pointing");
       socket.off("initial-pointer-map");
@@ -168,6 +168,7 @@ export default function TableView(): JSX.Element {
 
   const hasJoined = useRef(false);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!hasJoined.current && isParticipant && me) {
       const alreadyJoined = participants.some((p) => p.name === me);
@@ -177,7 +178,7 @@ export default function TableView(): JSX.Element {
         console.log("[Client] ✅ Emitted joined-table once:", me);
       }
     }
-  }, [participants, isParticipant, me]);
+  }, [isParticipant, me]);
   useEffect(() => {
     const handleUnload = () => {
       socket.emit("leave", { name: me });

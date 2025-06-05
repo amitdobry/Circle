@@ -11,11 +11,13 @@ type Props = {
 export default function SoulCirclePanel({ me }: Props) {
   const { panelConfig, fetchPanelLayout } = usePanelLayoutConfig(me);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchPanelLayout(); // on mount
-  }, [fetchPanelLayout]);
+  }, []);
 
   // 🔥 Listen for table updates and re-fetch config when needed
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const refresh = () => {
       console.log(
@@ -35,7 +37,7 @@ export default function SoulCirclePanel({ me }: Props) {
       socket.off("live-speaker", refresh);
       socket.off("initial-pointer-map", refresh);
     };
-  }, [fetchPanelLayout, me]);
+  }, []);
 
   // const panelConfigTest = testPanel; // 🧪 skip socket for now
   // const panelConfigTest = testPanelAttention; // 🧪 skip socket for now

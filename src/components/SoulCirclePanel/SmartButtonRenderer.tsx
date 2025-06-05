@@ -133,6 +133,14 @@ export default function SmartButtonRenderer({
               actionType: config.actionType,
             });
             break;
+          case "concentNewSpeakerFromMicDropped":
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              control: config.control,
+              actionType: config.actionType,
+            });
+            break;
           default:
             console.warn("Unhandled speaker control:", config.control);
             break;
