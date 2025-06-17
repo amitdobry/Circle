@@ -20,12 +20,17 @@ type SmartButtonProps = {
     control?:
       | "interrupt"
       | "passMic"
+      | "startPassMic"
       | "releaseMic"
       | "point"
       | "raiseHand"
       | "dropTheMic"
       | "wishToSpeakAfterMicDropped"
-      | "declineRequestAfterMicDropped";
+      | "declineRequestAfterMicDropped"
+      | "declineNewCandidateRequestAfterMicDropped"
+      | "offerMicToUserFromPassTheMic"
+      | "acceptMicOfferFromPassTheMic"
+      | "openChooseASpeakerFromPassTheMic";
     tailwind?: string; // consider deprecating in favor of buttonClass (upstream)
   };
   blockClass?: string; // outer wrapper div
@@ -81,7 +86,14 @@ export default function SmartButtonRenderer({
       case "speakerControl":
         switch (config.control) {
           case "interrupt":
-          case "passMic":
+          case "startPassMic":
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              control: config.control,
+              actionType: config.actionType,
+            });
+            break;
           case "dropTheMic":
             socket.emit("clientEmits", {
               name: me,
@@ -106,6 +118,14 @@ export default function SmartButtonRenderer({
               actionType: config.actionType,
             });
             break;
+          case "openChooseASpeakerFromPassTheMic":
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              control: config.control,
+              actionType: config.actionType,
+            });
+            break;
           default:
             console.warn("Unhandled speaker control:", config.control);
             break;
@@ -115,7 +135,7 @@ export default function SmartButtonRenderer({
       case "listenerControl":
         switch (config.actionType) {
           case "interrupt":
-          case "passMic":
+          case "startPassMic":
             break;
           case "wishToSpeakAfterMicDropped":
             socket.emit("clientEmits", {
@@ -139,6 +159,32 @@ export default function SmartButtonRenderer({
               type: config.group,
               control: config.control,
               actionType: config.actionType,
+            });
+            break;
+          case "declineNewCandidateRequestAfterMicDropped":
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              control: config.control,
+              actionType: config.actionType,
+            });
+            break;
+          case "offerMicToUserFromPassTheMic":
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              control: config.control,
+              actionType: config.actionType,
+              targetUser: config.targetUser,
+            });
+            break;
+          case "acceptMicOfferFromPassTheMic":
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              control: config.control,
+              actionType: config.actionType,
+              targetUser: config.targetUser,
             });
             break;
           default:

@@ -34,7 +34,12 @@ function App(): JSX.Element {
         font-semibold border bg-gray-100 text-gray-600 border-gray-300
         hover:bg-gray-200 transition px-6 py-3 rounded-full text-base
         font-semibold border bg-emerald-500 text-white border-emerald-600
-        hover:bg-emerald-600 transition
+        hover:bg-emerald-600 transition px-5 py-3 rounded-full text-sm
+        font-semibold border transition-all duration-200 bg-green-500 text-white
+        border-green-600 hover:bg-green-600 hover:shadow-md hover:scale-105 px-5
+        py-3 rounded-full text-sm font-semibold border transition-all
+        duration-200 bg-blue-500 text-white border-blue-600 hover:bg-blue-600
+        hover:shadow-md hover:scale-105
       </div>
 
       {/* 👇 Your actual App Router */}

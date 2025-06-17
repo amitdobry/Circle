@@ -46,7 +46,7 @@ export type ButtonBlock = BaseBlock & {
       | "semiListenerAction";
     group?: "ear" | "brain" | "mouth";
     targetUser?: string;
-    control?: "interrupt" | "passMic" | "releaseMic";
+    control?: "interrupt" | "passMic" | "releaseMic" | "startPassMic";
     state?: string;
   };
 };
