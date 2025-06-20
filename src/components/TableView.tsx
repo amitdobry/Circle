@@ -253,10 +253,10 @@ export default function TableView(): JSX.Element {
             className="absolute inset-0"
             style={{
               backgroundImage: `url(${process.env.PUBLIC_URL}/backgrounds/glif-background6.png)`,
-              backgroundSize: "133%", // Slightly zoomed in
+              backgroundSize: isMobile ? "120%" : "133%",
               backgroundRepeat: "no-repeat",
-              backgroundPosition: "center -136px", // Moves it 3px downward
-              opacity: 1,
+              backgroundPosition: isMobile ? "64% -84px" : "60% -136px",
+              opacity: 0.7,
               zIndex: -1,
             }}
           />
