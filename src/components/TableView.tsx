@@ -262,7 +262,9 @@ export default function TableView(): JSX.Element {
           />
 
           {/* Text Content */}
-          <div className="flex flex-col justify-center items-center h-full px-4 py-7 text-[#3a2e22] font-serif text-[11px] sm:text-xs text-center leading-tight overflow-y-auto max-w-[70%] sm:max-w-[65%]">
+          <div
+            className="flex flex-col justify-center items-center h-full px-4 py-7 text-[#3a2e22] font-serif text-[11px] sm:text-xs text-center leading-tight overflow-y-auto max-w-[70%] sm:max-w-[65%]"
+            style={{ transform: isMobile ? "translateY(-6px)" : undefined }}>
             {logs.map((log, i) => (
               <div key={i} className="whitespace-pre-wrap mb-1 font-semibold">
                 {log}
