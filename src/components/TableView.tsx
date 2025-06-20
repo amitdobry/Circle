@@ -247,24 +247,44 @@ export default function TableView(): JSX.Element {
         className="relative w-full max-w-[700px] aspect-[5/6] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center overflow-visible">
         <div
           ref={containerRef}
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 p-2 rounded-xl shadow-md border border-gray-300 text-sm text-gray-700 space-y-1 bg-white overflow-y-auto w-[60%] max-w-[280px] sm:w-[280px] h-[100px] sm:h-[160px] text-xs sm:text-sm opacity-95">
-          {logs.map((log, i) => (
-            <div key={i} className="whitespace-pre-wrap">
-              {log}
-            </div>
-          ))}
-          {isMeLive ? (
-            <textarea
-              value={userInput}
-              onChange={handleLogInput}
-              className="w-full bg-transparent outline-none resize-none text-sm"
-              rows={1}
-              style={{ lineHeight: "1.25rem", maxHeight: "6.5rem" }}
-              placeholder="Type here..."
-            />
-          ) : (
-            userInput && <div className="whitespace-pre-wrap">{userInput}</div>
-          )}
+          className="w-[80%] max-w-[380px] sm:w-[380px] aspect-[3/4] relative flex items-center justify-center z-10 pointer-events-auto">
+          {/* Background Gliff */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${process.env.PUBLIC_URL}/backgrounds/glif-background3.png)`,
+              backgroundSize: "contain",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "center",
+              zIndex: -1,
+            }}
+          />
+
+          {/* Text Content */}
+          <div className="flex flex-col justify-center items-center h-full px-4 py-7 text-[#3a2e22] font-serif text-[11px] sm:text-xs text-center leading-tight overflow-y-auto max-w-[70%] sm:max-w-[65%]">
+            {logs.map((log, i) => (
+              <div key={i} className="whitespace-pre-wrap mb-1 font-semibold">
+                {log}
+              </div>
+            ))}
+
+            {isMeLive ? (
+              <textarea
+                value={userInput}
+                onChange={handleLogInput}
+                className="w-full mt-2 bg-transparent outline-none resize-none text-[#3a2e22] font-semibold placeholder-[#7e715c] text-center text-[11px] sm:text-xs leading-tight"
+                rows={1}
+                style={{ maxHeight: "6rem" }}
+                placeholder="Etch your glif here..."
+              />
+            ) : (
+              userInput && (
+                <div className="whitespace-pre-wrap text-[#3a2e22] font-semibold mt-2 text-center text-[11px] sm:text-xs leading-tight">
+                  {userInput}
+                </div>
+              )
+            )}
+          </div>
         </div>
 
         {participants.map((user, i) => {
