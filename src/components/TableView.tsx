@@ -28,6 +28,11 @@ export default function TableView(): JSX.Element {
   const [svgCenter, setSvgCenter] = useState({ x: 350, y: 250 });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const [isSyncActive, setIsSyncActive] = useState(false);
+  const [visibleLog, setVisibleLog] = useState<string | null>(null);
+  const logTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [glowKey, setGlowKey] = useState(0);
+  const [fadeKey, setFadeKey] = useState(0);
+
   const [prompt, setPrompt] = useState<{
     icon: string;
     message: string;
@@ -98,8 +103,23 @@ export default function TableView(): JSX.Element {
       }
     );
 
+    // socket.on("log-event", (msg: string) => {
+    //   setLogs((prev) => [...prev.slice(-4), msg]);
+    // });
+
     socket.on("log-event", (msg: string) => {
-      setLogs((prev) => [...prev.slice(-4), msg]);
+      if (visibleLog) {
+        setVisibleLog(null); // trigger fade-out
+        setTimeout(() => {
+          setVisibleLog(msg); // trigger fade-in
+          setGlowKey((prev) => prev + 1); // pulse glow too
+          setFadeKey((prev) => prev + 1);
+        }, 700); // match duration
+      } else {
+        setVisibleLog(msg); // fade in directly
+        setFadeKey((prev) => prev + 1);
+        setGlowKey((prev) => prev + 1);
+      }
     });
 
     socket.on(
@@ -242,6 +262,16 @@ export default function TableView(): JSX.Element {
         SoulCircle Table
       </h1>
       <span className="block h-2 sm:h-4"></span>
+      {visibleLog && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <span
+            key={fadeKey}
+            className="text-black font-serif text-sm sm:text-base animate-fadeout">
+            {visibleLog}
+          </span>
+        </div>
+      )}
+
       <div
         ref={containerRef}
         className="relative w-full max-w-[700px] aspect-[5/6] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center overflow-visible">
@@ -377,7 +407,20 @@ export default function TableView(): JSX.Element {
         </svg>
       </div>
 
-      <div className="w-full px-2 sm:px-0 mt-12 sm:mt-12">
+      <div className="mt-[32px] sm:mt-[40px] relative z-20 flex justify-center w-full px-4">
+        <div
+          key={glowKey} // forces a re-render of the animated div
+          className="min-w-[20rem] max-w-md h-10 sm:h-11 px-6 rounded-full bg-emerald-100/80 text-emerald-900 shadow-md backdrop-blur-md font-serif tracking-wide italic text-sm sm:text-base flex items-center justify-center transition-all duration-500 animate-glow">
+          <span
+            className={`opacity-${
+              visibleLog ? "100" : "0"
+            } transition-opacity duration-700 ease-in-out`}>
+            {visibleLog}
+          </span>
+        </div>
+      </div>
+
+      <div className="w-full px-2 mt-[32px] sm:mt-[40px]">
         <div className="max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2">
           {isParticipant &&
             (isSyncActive ? (
