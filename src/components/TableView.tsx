@@ -22,6 +22,12 @@ export default function TableView(): JSX.Element {
   // const [panelHidden, setPanelHidden] = useState<boolean>(false);
   // const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [actionLog, setActionLog] = useState<string | null>(null);
+  const [systemLogs, setSystemLogs] = useState<string[]>([]);
+  const [textLogs, setTextLogs] = useState<
+    { userName: string; text: string; timestamp: number }[]
+  >([]);
+
   const [userInput, setUserInput] = useState<string>("");
   const participantsRef = useRef<Participant[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,7 +35,6 @@ export default function TableView(): JSX.Element {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const [isSyncActive, setIsSyncActive] = useState(false);
   const [visibleLog, setVisibleLog] = useState<string | null>(null);
-  const logTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [glowKey, setGlowKey] = useState(0);
   const [fadeKey, setFadeKey] = useState(0);
 
@@ -103,24 +108,36 @@ export default function TableView(): JSX.Element {
       }
     );
 
-    // socket.on("log-event", (msg: string) => {
-    //   setLogs((prev) => [...prev.slice(-4), msg]);
-    // });
-
-    socket.on("log-event", (msg: string) => {
-      if (visibleLog) {
-        setVisibleLog(null); // trigger fade-out
+    socket.on("action-log", (msg: string) => {
+      if (actionLog) {
+        setActionLog(null); // fade out
         setTimeout(() => {
-          setVisibleLog(msg); // trigger fade-in
+          setActionLog(msg); // trigger fade-in
           setGlowKey((prev) => prev + 1); // pulse glow too
           setFadeKey((prev) => prev + 1);
         }, 700); // match duration
       } else {
-        setVisibleLog(msg); // fade in directly
+        setActionLog(msg); // fade in directly
         setFadeKey((prev) => prev + 1);
         setGlowKey((prev) => prev + 1);
       }
     });
+
+    socket.on("system-log", (msg: string) => {
+      setVisibleLog(msg); // fade in
+      setFadeKey((prev) => prev + 1); // restart animation if needed
+
+      setTimeout(() => {
+        setVisibleLog(null); // fade out
+      }, 3000000); // show for 3 seconds
+    });
+
+    socket.on(
+      "textlog:entry",
+      (entry: { userName: string; text: string; timestamp: number }) => {
+        setTextLogs((prev) => [...prev, entry]);
+      }
+    );
 
     socket.on(
       "initial-pointer-map",
@@ -258,20 +275,19 @@ export default function TableView(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-start text-gray-800">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 mt-2 sm:mt-3 text-center z-20">
+      {/* <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 mt-2 sm:mt-3 text-center z-20"> */}
+      <div className="h-6 w-full flex justify-center items-center transition-opacity duration-700 mt-1 mb-2">
+        <span
+          key={fadeKey}
+          className={`text-black font-serif text-sm sm:text-base transition-opacity duration-700 ease-in-out ${
+            visibleLog ? "opacity-100" : "opacity-0"
+          }`}>
+          {visibleLog || "‎"}
+        </span>
+      </div>
+      <h1 className="text-2xl sm:text-3xl font-bold sm:mt-1 mb-6 text-center z-20">
         SoulCircle Table
       </h1>
-      <span className="block h-2 sm:h-4"></span>
-      {visibleLog && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <span
-            key={fadeKey}
-            className="text-black font-serif text-sm sm:text-base animate-fadeout">
-            {visibleLog}
-          </span>
-        </div>
-      )}
-
       <div
         ref={containerRef}
         className="relative w-full max-w-[700px] aspect-[5/6] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center overflow-visible">
@@ -413,9 +429,9 @@ export default function TableView(): JSX.Element {
           className="min-w-[20rem] max-w-md h-10 sm:h-11 px-6 rounded-full bg-emerald-100/80 text-emerald-900 shadow-md backdrop-blur-md font-serif tracking-wide italic text-sm sm:text-base flex items-center justify-center transition-all duration-500 animate-glow">
           <span
             className={`opacity-${
-              visibleLog ? "100" : "0"
+              actionLog ? "100" : "0"
             } transition-opacity duration-700 ease-in-out`}>
-            {visibleLog}
+            {actionLog}
           </span>
         </div>
       </div>
