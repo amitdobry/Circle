@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, JSX } from "react";
 import { useLocation } from "react-router-dom";
 import socket from "../socket/index";
-// import AttentionSelector from "./AttentionSelector";
 import { Participant } from "../types/participant";
-// import ListenerSyncPanel from "./ListenersPanel";
-// import SpeakerPanel from "./SpeakersPanel";
-// import { GestureButton } from "../types/gestureButtons";
 import SoulCirclePanel from "./SoulCirclePanel";
+import { GliffMessage } from "../types/gliffMessage";
+import GliffLog from "./GliffMessageComponent/GliffLog";
 
 type PointerMap = Record<string, string>;
 
@@ -19,15 +17,14 @@ export default function TableView(): JSX.Element {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [pointerMap, setPointerMap] = useState<PointerMap>({});
   const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);
-  // const [panelHidden, setPanelHidden] = useState<boolean>(false);
-  // const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [actionLog, setActionLog] = useState<string | null>(null);
   const [systemLogs, setSystemLogs] = useState<string[]>([]);
   const [textLogs, setTextLogs] = useState<
     { userName: string; text: string; timestamp: number }[]
   >([]);
-
+  const [gliffLog, setGliffLog] = useState<GliffMessage[]>([]);
+  const lastKeyRef = useRef<string | null>(null);
   const [userInput, setUserInput] = useState<string>("");
   const participantsRef = useRef<Participant[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,19 +59,15 @@ export default function TableView(): JSX.Element {
   };
 
   useEffect(() => {
-    socket.on("logBar:update", ({ text, userName }) => {
-      if (userName === me) {
-        return;
-      }
-      setUserInput(text);
-
-      console.log("logBar:update payload →", { text, userName });
+    socket.on("gliffLog:update", (entries: GliffMessage[]) => {
+      if (!Array.isArray(entries)) return;
+      setGliffLog(entries);
     });
 
     return () => {
-      socket.off("logBar:update");
+      socket.off("gliffLog:update");
     };
-  }, [me]);
+  }, []);
 
   useEffect(() => {
     const updateCenter = () => {
@@ -129,7 +122,7 @@ export default function TableView(): JSX.Element {
 
       setTimeout(() => {
         setVisibleLog(null); // fade out
-      }, 3000000); // show for 3 seconds
+      }, 3000); // show for 3 seconds
     });
 
     socket.on(
@@ -192,8 +185,6 @@ export default function TableView(): JSX.Element {
     }
 
     return () => {
-      // const stillIn = participantsRef.current.some((p) => p.name === me);
-      // if (stillIn) socket.emit("leave", { name: me });
       socket.off("user-list");
       socket.off("update-pointing");
       socket.off("initial-pointer-map");
@@ -225,52 +216,32 @@ export default function TableView(): JSX.Element {
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [me]);
 
-  // const handleSelect = (id: string) => {
-  //   // setSelectedTarget(id);
-  //   socket.emit("pointing", { from: me, to: id });
-  // };
-
-  // const raiseHand = () => {
-  //   // setSelectedTarget(me);
-  //   socket.emit("pointing", { from: me, to: me });
-  // };
-
   const handleLogInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setUserInput(value);
+
+    if (lastKeyRef.current === "Backspace") return;
+
     console.log("sending:", me + value);
     socket.emit("logBar:update", {
-      text: value,
+      text: value.slice(-1),
       userName: me,
     });
   };
 
-  // const handleListenerSelect = (mode: "ear" | "brain" | "mouth") => {
-  //   console.log("Listener selected mode:", mode);
-  //   socket.emit("listener-mode", { name: me, mode });
-  // };
+  const handleLogKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    lastKeyRef.current = e.key;
 
-  // const emitListenerAction = (button: GestureButton) => {
-  //   const { type, subType, actionType } = button;
-  //   const from = me;
+    if (e.key === "Backspace") {
+      socket.emit("logBar:update", {
+        text: "__BACKSPACE__",
+        userName: me,
+      });
+    }
+  };
 
-  //   console.log("[Client] Emitting clientEmits:", {
-  //     name: from,
-  //     type,
-  //     subType,
-  //     actionType,
-  //   }); // 💥 Add this BEFORE emitting!
-
-  //   socket.emit("clientEmits", {
-  //     name: from,
-  //     type,
-  //     subType,
-  //     actionType,
-  //   });
-  // };
-
-  const radiusX = svgCenter.x * (isMobile ? 0.85 : 0.85);
-  const radiusY = svgCenter.y * (isMobile ? 0.8 : 0.85);
+  const radiusX = svgCenter.x * (isMobile ? 0.85 : 1.1);
+  const radiusY = svgCenter.y * (isMobile ? 0.8 : 0.95);
   const positions: Record<string, { x: number; y: number }> = {};
 
   return (
@@ -291,9 +262,7 @@ export default function TableView(): JSX.Element {
       <div
         ref={containerRef}
         className="relative w-full max-w-[700px] aspect-[5/6] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center overflow-visible">
-        <div
-          ref={containerRef}
-          className="w-[80%] max-w-[380px] sm:w-[380px] aspect-[3/4] relative flex items-center justify-center z-10 pointer-events-auto">
+        <div className="w-[80%] max-w-[380px] sm:w-[380px] aspect-[3/4] relative flex items-center justify-center z-10 pointer-events-auto">
           {/* Background Gliff */}
           <div
             className="absolute inset-0"
@@ -306,36 +275,10 @@ export default function TableView(): JSX.Element {
               zIndex: -1,
             }}
           />
-
-          {/* Text Content */}
-          <div
-            className="flex flex-col justify-center items-center h-full px-4 py-7 text-[#3a2e22] font-serif text-[11px] sm:text-xs text-center leading-tight overflow-y-auto max-w-[70%] sm:max-w-[65%]"
-            style={{ transform: isMobile ? "translateY(-6px)" : undefined }}>
-            {logs.map((log, i) => (
-              <div key={i} className="whitespace-pre-wrap mb-1 font-semibold">
-                {log}
-              </div>
-            ))}
-
-            {isMeLive ? (
-              <textarea
-                value={userInput}
-                onChange={handleLogInput}
-                className="w-full mt-2 bg-transparent outline-none resize-none text-[#3a2e22] font-semibold placeholder-[#7e715c] text-center text-[11px] sm:text-xs leading-tight"
-                rows={1}
-                style={{ maxHeight: "6rem" }}
-                placeholder="Etch your glif here..."
-              />
-            ) : (
-              userInput && (
-                <div className="whitespace-pre-wrap text-[#3a2e22] font-semibold mt-2 text-center text-[11px] sm:text-xs leading-tight">
-                  {userInput}
-                </div>
-              )
-            )}
-          </div>
+          <>
+            <GliffLog entries={gliffLog} me={me} />
+          </>
         </div>
-
         {participants.map((user, i) => {
           const angle = (i / participants.length) * 2 * Math.PI + Math.PI / 2;
           const x = radiusX * Math.cos(angle);
@@ -423,7 +366,7 @@ export default function TableView(): JSX.Element {
         </svg>
       </div>
 
-      <div className="mt-[32px] sm:mt-[40px] relative z-20 flex justify-center w-full px-4">
+      <div className="mt-[32px] sm:mt-[60px] relative z-20 flex justify-center w-full px-4">
         <div
           key={glowKey} // forces a re-render of the animated div
           className="min-w-[20rem] max-w-md h-10 sm:h-11 px-6 rounded-full bg-emerald-100/80 text-emerald-900 shadow-md backdrop-blur-md font-serif tracking-wide italic text-sm sm:text-base flex items-center justify-center transition-all duration-500 animate-glow">
@@ -436,35 +379,17 @@ export default function TableView(): JSX.Element {
         </div>
       </div>
 
-      <div className="w-full px-2 mt-[32px] sm:mt-[40px]">
+      <div className="w-full px-2 mt-[32px] sm:mt-[20px]">
         <div className="max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2">
-          {isParticipant &&
-            (isSyncActive ? (
-              liveSpeakerName === me ? (
-                <SoulCirclePanel me={me} />
-              ) : (
-                // <ListenerSyncPanel
-                //   emitListenerAction={emitListenerAction}
-                //   hidden={panelHidden}
-                //   toggle={() => setPanelHidden(!panelHidden)}
-                //   onSelect={handleListenerSelect}
-                //   speakerName={liveSpeakerName || "Unknown"} // ✨ new prop
-                // />
-                <SoulCirclePanel me={me} />
-              )
-            ) : (
-              // <AttentionSelector
-              //   participants={participants.filter((p) => p.name !== me)}
-              //   onSelect={handleSelect}
-              //   hidden={panelHidden}
-              //   toggle={() => setPanelHidden(!panelHidden)}
-              //   selected={selectedTarget || ""}
-              //   raiseHand={raiseHand}
-              //   raiseHandMode={selectedTarget === me}
-              //   me={me}
-              // />
-              <SoulCirclePanel me={me} />
-            ))}
+          {isParticipant && (
+            <SoulCirclePanel
+              me={me}
+              isMeLive={isMeLive}
+              userInput={userInput}
+              handleLogInput={handleLogInput}
+              handleLogKeyDown={handleLogKeyDown}
+            />
+          )}
         </div>
       </div>
 

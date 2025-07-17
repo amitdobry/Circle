@@ -8,6 +8,7 @@ type SmartButtonProps = {
     icon?: string;
     gestureCode?: string;
     actionType?: string;
+    code?: string;
     type:
       | "gesture"
       | "attentionTarget"
@@ -51,6 +52,14 @@ export default function SmartButtonRenderer({
         switch (config.group) {
           case "brain":
           case "ear":
+            if (!config.control || !config.group || !config.actionType) return;
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              control: config.control,
+              actionType: config.actionType,
+            });
+            break;
           case "mouth":
             if (!config.control || !config.group || !config.actionType) return;
             socket.emit("clientEmits", {
@@ -66,6 +75,22 @@ export default function SmartButtonRenderer({
         }
         break;
 
+      case "semiListenerAction":
+        switch (config.actionType) {
+          case "syncedGesture":
+            if (!config.code) return;
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group,
+              subType: config.code,
+              actionType: config.actionType,
+            });
+            break;
+          // case "point":
+          //   if (!config.targetUser) return;
+          //   socket.emit("pointing", { from: me, to: config.targetUser });
+          //   break;
+        }
       case "attentionTarget":
         switch (config.actionType) {
           case "point":

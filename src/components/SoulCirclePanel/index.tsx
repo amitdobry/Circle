@@ -6,9 +6,19 @@ import socket from "../../socket"; // 👈 make sure to import socket
 
 type Props = {
   me: string;
+  isMeLive: boolean;
+  userInput: string;
+  handleLogInput: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  handleLogKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 };
 
-export default function SoulCirclePanel({ me }: Props) {
+export default function SoulCirclePanel({
+  me,
+  isMeLive,
+  userInput,
+  handleLogInput,
+  handleLogKeyDown,
+}: Props) {
   const { panelConfig, fetchPanelLayout } = usePanelLayoutConfig(me);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,6 +96,17 @@ export default function SoulCirclePanel({ me }: Props) {
                   <div
                     key={panelSection.id}
                     className="flex flex-row justify-center gap-2">
+                    {isMeLive && (
+                      <textarea
+                        value={userInput}
+                        onChange={handleLogInput}
+                        onKeyDown={handleLogKeyDown}
+                        className="w-full mt-2 bg-transparent outline-none resize-none text-[#3a2e22] font-semibold placeholder-[#7e715c] text-center text-[11px] sm:text-xs leading-tight"
+                        rows={1}
+                        style={{ maxHeight: "6rem" }}
+                        placeholder="Etch to glif here..."
+                      />
+                    )}
                     {panelSection.blocks.map((block) => (
                       <RenderBlock key={block.id} block={block} me={me} />
                     ))}

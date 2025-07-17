@@ -41,8 +41,6 @@ function App(): JSX.Element {
         duration-200 bg-blue-500 text-white border-blue-600 hover:bg-blue-600
         hover:shadow-md hover:scale-105
       </div>
-
-      {/* 👇 Your actual App Router */}
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
