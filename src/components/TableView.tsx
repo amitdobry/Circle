@@ -263,7 +263,6 @@ export default function TableView(): JSX.Element {
         ref={containerRef}
         className="relative w-full max-w-[700px] aspect-[5/6] sm:aspect-[7/5] bg-white rounded-full shadow-2xl border-4 border-emerald-100 flex items-center justify-center overflow-visible">
         <div className="w-[80%] max-w-[380px] sm:w-[380px] aspect-[3/4] relative flex items-center justify-center z-10 pointer-events-auto">
-          {/* Background Gliff */}
           <div
             className="absolute inset-0"
             style={{
