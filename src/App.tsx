@@ -2,15 +2,22 @@ import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./views/HomePage";
 import TableView from "./components/TableView";
 import NamePrompt from "./views/NamePrompt";
+import DemoPage from "./views/DemoPage";
 import { Buffer } from "buffer";
 import process from "process";
-import { JSX } from "react";
+import { JSX, useEffect } from "react";
+import { authService } from "./services/authService";
 
 // @ts-ignore: Allow Buffer + process polyfills on window
 window.Buffer = Buffer;
 window.process = process;
 
 function App(): JSX.Element {
+  useEffect(() => {
+    // Handle Google OAuth callback
+    authService.handleGoogleCallback();
+  }, []);
+
   return (
     <>
       {/* 👇 ADD THIS HIDDEN HELPER DIV AT THE TOP */}
@@ -44,6 +51,7 @@ function App(): JSX.Element {
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/demo" element={<DemoPage />} />
           <Route path="/room" element={<TableView />} />
           <Route path="/name" element={<NamePrompt />} />
         </Routes>
