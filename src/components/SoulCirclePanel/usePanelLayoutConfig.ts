@@ -7,17 +7,23 @@ export function usePanelLayoutConfig(userName: string) {
 
   useEffect(() => {
     socket.on("receive:panelConfig", (payload) => {
-      console.log("[Client] 📦 Received panelConfig:", payload);
+      console.log(
+        `[Client] 📦 PANEL-RESPONSE: Received panelConfig for ${userName}:`,
+        payload
+      );
       setPanelConfig(payload);
     });
 
     return () => {
       socket.off("receive:panelConfig");
     };
-  }, []);
+  }, [userName]);
 
   const fetchPanelLayout = () => {
-    console.log("[Client] 🚀 Emitting request:panelConfig");
+    const timestamp = Date.now();
+    console.log(
+      `[Client] 🚀 PANEL-REQUEST: Emitting request:panelConfig for ${userName} at ${timestamp}`
+    );
     socket.emit("request:panelConfig", { userName });
   };
 

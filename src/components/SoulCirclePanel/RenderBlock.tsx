@@ -39,7 +39,7 @@ export default function RenderBlock({ block, me }: Props) {
         isSelected && block.buttonClassSelected
           ? block.buttonClassSelected
           : block.buttonClass;
-      console.log("[RenderBlock] final buttonClass:", className);
+      // console.log("[RenderBlock] final buttonClass:", className);
       return (
         <SmartButtonRenderer
           me={me}

@@ -23,29 +23,54 @@ export default function SoulCirclePanel({
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    console.log("[SoulCirclePanel] 🎯 MOUNT: Initial fetchPanelLayout for", me);
     fetchPanelLayout(); // on mount
   }, []);
 
   // 🔥 Listen for table updates and re-fetch config when needed
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const refresh = () => {
+    const refreshUserList = () => {
       console.log(
-        "[SoulCirclePanel] Detected change, re-fetching panel config"
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'user-list' event detected for ${me}, re-fetching panel config`
       );
       fetchPanelLayout();
     };
 
-    socket.on("user-list", refresh);
-    socket.on("avatars", refresh);
-    socket.on("live-speaker", refresh);
-    socket.on("initial-pointer-map", refresh);
+    const refreshAvatars = () => {
+      console.log(
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'avatars' event detected for ${me}, re-fetching panel config`
+      );
+      fetchPanelLayout();
+    };
+
+    const refreshLiveSpeaker = () => {
+      console.log(
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'live-speaker' event detected for ${me}, re-fetching panel config`
+      );
+      fetchPanelLayout();
+    };
+
+    const refreshPointerMap = () => {
+      console.log(
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'initial-pointer-map' event detected for ${me}, re-fetching panel config`
+      );
+      fetchPanelLayout();
+    };
+
+    console.log(
+      `[SoulCirclePanel] 🎧 LISTENERS: Setting up socket listeners for ${me}`
+    );
+    socket.on("user-list", refreshUserList);
+    socket.on("avatars", refreshAvatars);
+    socket.on("live-speaker", refreshLiveSpeaker);
+    socket.on("initial-pointer-map", refreshPointerMap);
 
     return () => {
-      socket.off("user-list", refresh);
-      socket.off("avatars", refresh);
-      socket.off("live-speaker", refresh);
-      socket.off("initial-pointer-map", refresh);
+      socket.off("user-list", refreshUserList);
+      socket.off("avatars", refreshAvatars);
+      socket.off("live-speaker", refreshLiveSpeaker);
+      socket.off("initial-pointer-map", refreshPointerMap);
     };
   }, []);
 
