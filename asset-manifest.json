@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/Circle/static/css/main.cada1375.css",
-    "main.js": "/Circle/static/js/main.2fd74e19.js",
+    "main.js": "/Circle/static/js/main.c2311612.js",
     "index.html": "/Circle/index.html",
     "main.cada1375.css.map": "/Circle/static/css/main.cada1375.css.map",
-    "main.2fd74e19.js.map": "/Circle/static/js/main.2fd74e19.js.map"
+    "main.c2311612.js.map": "/Circle/static/js/main.c2311612.js.map"
   },
   "entrypoints": [
     "static/css/main.cada1375.css",
-    "static/js/main.2fd74e19.js"
+    "static/js/main.c2311612.js"
   ]
 }
