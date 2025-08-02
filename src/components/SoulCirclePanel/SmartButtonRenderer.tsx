@@ -90,7 +90,19 @@ export default function SmartButtonRenderer({
           //   if (!config.targetUser) return;
           //   socket.emit("pointing", { from: me, to: config.targetUser });
           //   break;
+          default:
+            // Handle general semiListenerAction
+            if (!config.actionType) return;
+            socket.emit("semiListenerAction", {
+              from: me,
+              actionType: config.actionType,
+              group: config.group,
+              control: config.control,
+            });
+            break;
         }
+        break;
+
       case "attentionTarget":
         switch (config.actionType) {
           case "point":
@@ -221,16 +233,6 @@ export default function SmartButtonRenderer({
       case "listenerAction":
         if (!config.actionType) return;
         socket.emit("listenerAction", {
-          from: me,
-          actionType: config.actionType,
-          group: config.group,
-          control: config.control,
-        });
-        break;
-
-      case "semiListenerAction":
-        if (!config.actionType) return;
-        socket.emit("semiListenerAction", {
           from: me,
           actionType: config.actionType,
           group: config.group,

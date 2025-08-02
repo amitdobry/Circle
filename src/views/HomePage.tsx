@@ -98,7 +98,8 @@ export default function HomePage() {
         console.log("📡 [HomePage] Making API call to /api/auth/profile...");
 
         const { SOCKET_SERVER_URL } = await import("../config");
-        const API_BASE_URL = process.env.REACT_APP_SERVER_URL || SOCKET_SERVER_URL;
+        const API_BASE_URL =
+          process.env.REACT_APP_SERVER_URL || SOCKET_SERVER_URL;
 
         // Check profile with token from authService
         const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
