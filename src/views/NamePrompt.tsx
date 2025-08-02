@@ -15,12 +15,19 @@ export default function NamePrompt() {
 
   // Fetch avatars on load
   useEffect(() => {
+    console.log("🔄 [NamePrompt] Requesting avatars from server...");
     socket.emit("get-avatars");
+
     socket.on("avatars", (list) => {
+      console.log("🎯 [NamePrompt] Received avatars from server:", list);
       const enriched = list.map((a: any) => ({
         ...a,
         image: `${process.env.PUBLIC_URL}/avatars/avatar-${a.id}.png`,
       }));
+      console.log(
+        "🖼️ [NamePrompt] Enriched avatars with local images:",
+        enriched
+      );
       setAvatars(enriched);
     });
 

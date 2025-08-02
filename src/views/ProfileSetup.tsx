@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import socket from "../socket/index";
 import { AvatarInfo } from "../types/avatar";
 import { SessionConfig } from "../utils/sessionConfig";
+import { SOCKET_SERVER_URL } from "../config";
 
 export default function ProfileSetup() {
   const navigate = useNavigate();
@@ -46,7 +47,6 @@ export default function ProfileSetup() {
         throw new Error("Not authenticated");
       }
 
-      const { SOCKET_SERVER_URL } = await import("../config");
       const API_BASE_URL =
         process.env.REACT_APP_SERVER_URL || SOCKET_SERVER_URL;
 

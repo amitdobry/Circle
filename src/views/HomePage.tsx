@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { APP_VERSION } from "./../version";
+import { SOCKET_SERVER_URL } from "../config";
 import LoginPage from "./LoginPage";
 import { SessionConfig } from "../utils/sessionConfig";
 import { authService } from "../services/authService";
@@ -97,7 +98,6 @@ export default function HomePage() {
 
         console.log("📡 [HomePage] Making API call to /api/auth/profile...");
 
-        const { SOCKET_SERVER_URL } = await import("../config");
         const API_BASE_URL =
           process.env.REACT_APP_SERVER_URL || SOCKET_SERVER_URL;
 

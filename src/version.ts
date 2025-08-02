@@ -6,6 +6,4 @@ function generateLocalVersion(): string {
 }
 
 export const APP_VERSION =
-  process.env.NODE_ENV === "development"
-    ? generateLocalVersion()
-    : "__VERSION_PLACEHOLDER__";
+  process.env.NODE_ENV === "development" ? generateLocalVersion() : "b9529b2";
