@@ -20,9 +20,12 @@ export default function TableView(): JSX.Element {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [pointerMap, setPointerMap] = useState<PointerMap>({});
   const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [logs, setLogs] = useState<string[]>([]);
   const [actionLog, setActionLog] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [systemLogs, setSystemLogs] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [textLogs, setTextLogs] = useState<
     { userName: string; text: string; timestamp: number }[]
   >([]);
@@ -33,6 +36,7 @@ export default function TableView(): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgCenter, setSvgCenter] = useState({ x: 350, y: 250 });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSyncActive, setIsSyncActive] = useState(false);
   const [visibleLog, setVisibleLog] = useState<string | null>(null);
   const [glowKey, setGlowKey] = useState(0);
@@ -202,6 +206,7 @@ export default function TableView(): JSX.Element {
       "textlog:entry",
       (entry: { userName: string; text: string; timestamp: number }) => {
         setTextLogs((prev) => [...prev, entry]);
+        console.log("[TextLog]", entry);
       }
     );
 
@@ -265,7 +270,7 @@ export default function TableView(): JSX.Element {
       socket.off("live-speaker-cleared");
       socket.off("log-event");
     };
-  }, [me, isParticipant]);
+  }, [me, isParticipant, actionLog]); // Added actionLog to dependencies
 
   const hasJoined = useRef(false);
 
@@ -279,7 +284,7 @@ export default function TableView(): JSX.Element {
         console.log("[Client] ✅ Emitted joined-table once:", me);
       }
     }
-  }, [isParticipant, me]);
+  }, [isParticipant, me, participants]); // Added participants to dependencies
   useEffect(() => {
     const handleUnload = () => {
       socket.emit("leave", { name: me });
