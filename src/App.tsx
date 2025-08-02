@@ -2,6 +2,7 @@ import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./views/HomePage";
 import TableView from "./components/TableView";
 import NamePrompt from "./views/NamePrompt";
+import ProfileSetup from "./views/ProfileSetup";
 import DemoPage from "./views/DemoPage";
 import { Buffer } from "buffer";
 import process from "process";
@@ -54,6 +55,7 @@ function App(): JSX.Element {
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/room" element={<TableView />} />
           <Route path="/name" element={<NamePrompt />} />
+          <Route path="/profile" element={<ProfileSetup />} />
         </Routes>
       </Router>
     </>

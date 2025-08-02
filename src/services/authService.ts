@@ -1,8 +1,10 @@
 // Auth Service for SoulCircle
+import { SessionConfig } from "../utils/sessionConfig";
+
 const API_BASE_URL =
   process.env.REACT_APP_SERVER_URL || "http://localhost:3001";
 
-export interface User {
+interface User {
   _id: string;
   name: string;
   email: string;
@@ -22,12 +24,21 @@ class AuthService {
   private user: User | null = null;
 
   constructor() {
-    // Initialize from localStorage on service creation
-    this.token = localStorage.getItem("token");
+    // Initialize from SessionConfig on service creation
+    this.token = SessionConfig.getToken();
+    console.log(
+      "🔧 [AuthService] Constructor - Token from SessionConfig:",
+      this.token
+    );
+
     const userStr = localStorage.getItem("user");
     if (userStr) {
       try {
         this.user = JSON.parse(userStr);
+        console.log(
+          "👤 [AuthService] Constructor - User from localStorage:",
+          this.user
+        );
       } catch (e) {
         console.error("Failed to parse user from localStorage:", e);
         localStorage.removeItem("user");
@@ -58,7 +69,7 @@ class AuthService {
     // Store token and user
     this.token = data.token;
     this.user = data.user;
-    localStorage.setItem("token", data.token);
+    SessionConfig.setToken(data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
 
     return data;
@@ -83,7 +94,7 @@ class AuthService {
     // Store token and user
     this.token = data.token;
     this.user = data.user;
-    localStorage.setItem("token", data.token);
+    SessionConfig.setToken(data.token);
     localStorage.setItem("user", JSON.stringify(data.user));
 
     return data;
@@ -93,7 +104,7 @@ class AuthService {
   logout(): void {
     this.token = null;
     this.user = null;
-    localStorage.removeItem("token");
+    SessionConfig.removeToken();
     localStorage.removeItem("user");
   }
 
@@ -184,7 +195,7 @@ class AuthService {
         const user = JSON.parse(decodeURIComponent(userStr));
         this.token = token;
         this.user = user;
-        localStorage.setItem("token", token);
+        SessionConfig.setToken(token);
         localStorage.setItem("user", JSON.stringify(user));
 
         // Clean up URL

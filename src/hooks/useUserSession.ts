@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface UserProfile {
   name?: string;
@@ -38,6 +38,7 @@ export const useUserSession = ({
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const hasNavigatedRef = useRef(false); // Prevent navigation loops
 
   useEffect(() => {
     const checkUserSession = async () => {
@@ -46,7 +47,7 @@ export const useUserSession = ({
         setError(null);
 
         // Get token from localStorage (if exists)
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem("token");
 
         const headers: HeadersInit = {
           "Content-Type": "application/json",
@@ -70,22 +71,48 @@ export const useUserSession = ({
         const data: UserProfile = await response.json();
         setUserProfile(data);
 
+        console.log("🔍 [useUserSession] Profile data received:", {
+          isGuest: data.isGuest,
+          name: data.name,
+          avatarId: data.avatarId,
+          user: data.user,
+        });
+
         // Navigation logic based on the 3 scenarios
+        if (hasNavigatedRef.current) {
+          console.log(
+            "🚫 [useUserSession] Navigation already handled, skipping"
+          );
+          return;
+        }
+
         if (data.isGuest) {
           // Scenario 1: Guest user - show avatar selection to "Join Table"
-          console.log("Guest user detected - showing avatar selection");
+          console.log(
+            "🎯 [useUserSession] Guest user detected - showing avatar selection"
+          );
+          hasNavigatedRef.current = true;
           showAvatarSelection();
         } else if (data.name && data.avatarId) {
           // Scenario 3: Returning user with complete profile - go to homepage
           console.log(
-            "Returning user with complete profile - going to homepage"
+            "🏠 [useUserSession] Returning user with complete profile - going to homepage",
+            { name: data.name, avatarId: data.avatarId }
           );
+          hasNavigatedRef.current = true;
           goToHomepage();
         } else {
-          // Scenario 2: Authenticated user but incomplete profile - show avatar selection
+          // Scenario 2: Authenticated user but incomplete profile - show ProfileSetup
           console.log(
-            "Authenticated user with incomplete profile - showing avatar selection"
+            "⚠️ [useUserSession] Authenticated user with incomplete profile - showing profile setup",
+            {
+              name: data.name,
+              avatarId: data.avatarId,
+              missingName: !data.name,
+              missingAvatar: !data.avatarId,
+            }
           );
+          hasNavigatedRef.current = true;
           showAvatarSelection();
         }
       } catch (err) {

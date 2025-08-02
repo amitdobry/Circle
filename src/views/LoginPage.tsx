@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 
 interface LoginPageProps {
@@ -8,7 +7,6 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ isOpen, onClose }: LoginPageProps) {
-  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,9 +48,9 @@ export default function LoginPage({ isOpen, onClose }: LoginPageProps) {
         await authService.register(name, email, password);
       }
 
-      // Close modal and redirect
+      // Close modal - let HomePage handle authentication state change
       onClose();
-      navigate("/name");
+      // Don't navigate - HomePage will detect the new auth state and handle routing
     } catch (err: any) {
       setError(err.message || "Authentication failed");
     } finally {
