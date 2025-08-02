@@ -46,7 +46,10 @@ export default function ProfileSetup() {
         throw new Error("Not authenticated");
       }
 
-      const response = await fetch("http://localhost:3001/api/auth/profile", {
+      const { SOCKET_SERVER_URL } = await import("../config");
+      const API_BASE_URL = process.env.REACT_APP_SERVER_URL || SOCKET_SERVER_URL;
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

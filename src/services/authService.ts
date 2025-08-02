@@ -1,8 +1,8 @@
 // Auth Service for SoulCircle
 import { SessionConfig } from "../utils/sessionConfig";
+import { SOCKET_SERVER_URL } from "../config";
 
-const API_BASE_URL =
-  process.env.REACT_APP_SERVER_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.REACT_APP_SERVER_URL || SOCKET_SERVER_URL;
 
 interface User {
   _id: string;
