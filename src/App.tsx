@@ -1,4 +1,9 @@
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+} from "react-router-dom";
 import HomePage from "./views/HomePage";
 import TableView from "./components/TableView";
 import NamePrompt from "./views/NamePrompt";
@@ -8,16 +13,43 @@ import { Buffer } from "buffer";
 import process from "process";
 import { JSX, useEffect } from "react";
 import { authService } from "./services/authService";
+import socket from "./socket/index";
 
 // @ts-ignore: Allow Buffer + process polyfills on window
 window.Buffer = Buffer;
 window.process = process;
+window.Buffer = Buffer;
+window.process = process;
 
-function App(): JSX.Element {
+// App content component that can use useNavigate
+function AppContent(): JSX.Element {
+  const navigate = useNavigate();
+
   useEffect(() => {
     // Handle Google OAuth callback
     authService.handleGoogleCallback();
-  }, []);
+
+    // Global session end handler for navigation
+    const handleSessionEnded = (data: any) => {
+      console.log("🏠 App-level session ended, navigating home:", data);
+      if (data.message) {
+        alert(data.message);
+      }
+    };
+
+    const handleForceNavigateHome = (data: any) => {
+      console.log("🏠 App-level force navigation home:", data);
+      navigate("/");
+    };
+
+    socket.on("session-ended", handleSessionEnded);
+    socket.on("force-navigate-home", handleForceNavigateHome);
+
+    return () => {
+      socket.off("session-ended", handleSessionEnded);
+      socket.off("force-navigate-home", handleForceNavigateHome);
+    };
+  }, [navigate]);
 
   return (
     <>
@@ -49,16 +81,22 @@ function App(): JSX.Element {
         duration-200 bg-blue-500 text-white border-blue-600 hover:bg-blue-600
         hover:shadow-md hover:scale-105
       </div>
-      <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/demo" element={<DemoPage />} />
-          <Route path="/room" element={<TableView />} />
-          <Route path="/name" element={<NamePrompt />} />
-          <Route path="/profile" element={<ProfileSetup />} />
-        </Routes>
-      </Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/demo" element={<DemoPage />} />
+        <Route path="/room" element={<TableView />} />
+        <Route path="/name" element={<NamePrompt />} />
+        <Route path="/profile" element={<ProfileSetup />} />
+      </Routes>
     </>
+  );
+}
+
+function App(): JSX.Element {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

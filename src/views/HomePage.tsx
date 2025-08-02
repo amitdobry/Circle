@@ -6,6 +6,7 @@ import LoginPage from "./LoginPage";
 import { SessionConfig } from "../utils/sessionConfig";
 import { authService } from "../services/authService";
 import socket from "../socket/index";
+// import SessionLengthPicker from "../components/SessionLengthPicker";
 
 (window as any).APP_VERSION = APP_VERSION;
 export default function HomePage() {
@@ -19,6 +20,7 @@ export default function HomePage() {
     SessionConfig.useTabSessions
   );
   const [authCheckTrigger, setAuthCheckTrigger] = useState(0);
+  // const [showSessionPicker, setShowSessionPicker] = useState(false);
 
   // Update global session config when toggle changes
   const handleSessionModeToggle = () => {
@@ -73,6 +75,36 @@ export default function HomePage() {
       setError(reason || "Unable to join. Please try again.");
     });
   };
+
+  // Handle guest joining (auto-start session on server)
+  const handleJoinAsGuest = async () => {
+    // Simply navigate to name selection - server will auto-start 60min session when first user joins
+    navigate("/name");
+  };
+
+  // Handle session length selection
+  /* const handleSessionLengthSelect = async (durationMinutes: number) => {
+    try {
+      const API_BASE_URL =
+        process.env.REACT_APP_SERVER_URL || SOCKET_SERVER_URL;
+      const response = await fetch(`${API_BASE_URL}/api/session/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ durationMinutes }),
+      });
+
+      if (response.ok) {
+        setShowSessionPicker(false);
+        navigate("/name");
+      } else {
+        console.error("Failed to start session");
+        setError("Failed to start session. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error starting session:", error);
+      setError("Failed to start session. Please try again.");
+    }
+  }; */
 
   // Simple user session check - only runs once
   useEffect(() => {
@@ -236,7 +268,7 @@ export default function HomePage() {
           {isGuest ? (
             <>
               <button
-                onClick={() => navigate("/name")}
+                onClick={handleJoinAsGuest}
                 className="px-6 py-3 rounded-lg bg-emerald-500 text-white font-semibold text-lg shadow hover:bg-emerald-600 transition">
                 Take a Seat
               </button>
@@ -296,6 +328,13 @@ export default function HomePage() {
 
       {/* Login Modal */}
       <LoginPage isOpen={showLogin} onClose={handleLoginClose} />
+
+      {/* Session Length Picker */}
+      {/* <SessionLengthPicker
+        isOpen={showSessionPicker}
+        onClose={() => setShowSessionPicker(false)}
+        onSelect={handleSessionLengthSelect}
+      /> */}
     </>
   );
 }

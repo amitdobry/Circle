@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef, JSX } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import socket from "../socket/index";
 import { Participant } from "../types/participant";
 import SoulCirclePanel from "./SoulCirclePanel";
 import { GliffMessage } from "../types/gliffMessage";
 import GliffLog from "./GliffMessageComponent/GliffLog";
+import SessionTimer from "./SessionTimer";
+import SessionLengthPicker from "./SessionLengthPicker";
 
 type PointerMap = Record<string, string>;
 
 export default function TableView(): JSX.Element {
   const location = useLocation();
+  const navigate = useNavigate();
   const queryParams = new URLSearchParams(location.search);
   const mode = queryParams.get("mode");
   const isParticipant = mode === "participant";
@@ -34,6 +37,7 @@ export default function TableView(): JSX.Element {
   const [visibleLog, setVisibleLog] = useState<string | null>(null);
   const [glowKey, setGlowKey] = useState(0);
   const [fadeKey, setFadeKey] = useState(0);
+  const [showSessionPicker, setShowSessionPicker] = useState(false);
 
   const [prompt, setPrompt] = useState<{
     icon: string;
@@ -42,6 +46,31 @@ export default function TableView(): JSX.Element {
   } | null>(null);
 
   const isMeLive = liveSpeakerName === me;
+
+  // Session end handler
+  const handleSessionEnd = () => {
+    // Handle session end - could redirect to home or show message
+    console.log("Session ended!");
+    // Optional: redirect to home
+    // window.location.href = "/";
+  };
+
+  // Session management functions
+  const handleSessionSelect = (durationMinutes: number) => {
+    console.log(`🚀 Starting session for ${durationMinutes} minutes...`);
+    socket.emit("start-session", { durationMinutes });
+    setShowSessionPicker(false);
+  };
+
+  const handleSessionPickerClose = () => {
+    console.log("🚫 Session picker closed by user");
+    setShowSessionPicker(false);
+  };
+
+  // Debug effect to track session picker state changes
+  useEffect(() => {
+    console.log("🔍 Session picker state changed:", showSessionPicker);
+  }, [showSessionPicker]);
 
   const avatarMap: Record<string, string> = {
     Elemental: process.env.PUBLIC_URL + "/avatars/avatar-Elemental.png",
@@ -64,10 +93,54 @@ export default function TableView(): JSX.Element {
       setGliffLog(entries);
     });
 
+    // Session picker handlers
+    socket.on("show-session-picker", (data) => {
+      console.log("🎯 Received show-session-picker event", data);
+      setShowSessionPicker(true);
+    });
+
+    // Debug event to track session picker status
+    socket.on("debug-session-picker-status", (data) => {
+      console.log("🔍 Debug session picker status:", data);
+    });
+
+    // Session start error handler
+    socket.on("session-start-rejected", (data) => {
+      console.error("❌ Session start rejected:", data.reason);
+      alert(`Failed to start session: ${data.reason}`);
+    });
+
+    // Session started successfully
+    socket.on("session-started", (data) => {
+      console.log("✅ Session started:", data);
+      setShowSessionPicker(false);
+    });
+
+    // Session ended - show message and prepare for navigation
+    socket.on("session-ended", (data) => {
+      console.log("⏰ Session ended:", data);
+      if (data.message) {
+        alert(data.message);
+      }
+      // The server will send a force-navigate-home event after the countdown
+    });
+
+    // Force navigation to home page
+    socket.on("force-navigate-home", (data) => {
+      console.log("🏠 Navigating to home page:", data);
+      navigate("/");
+    });
+
     return () => {
       socket.off("gliffLog:update");
+      socket.off("show-session-picker");
+      socket.off("debug-session-picker-status");
+      socket.off("session-start-rejected");
+      socket.off("session-started");
+      socket.off("session-ended");
+      socket.off("force-navigate-home");
     };
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const updateCenter = () => {
@@ -256,6 +329,10 @@ export default function TableView(): JSX.Element {
           {visibleLog || "‎"}
         </span>
       </div>
+
+      {/* Session Timer - positioned above the table title */}
+      <SessionTimer onSessionEnd={handleSessionEnd} />
+
       <h1 className="text-2xl sm:text-3xl font-bold sm:mt-1 mb-6 text-center z-20">
         SoulCircle Table
       </h1>
@@ -416,6 +493,13 @@ export default function TableView(): JSX.Element {
       <p className="mt-8 mb-12 text-sm text-gray-500 text-center max-w-sm">
         Choose one to listen to. When all align, a voice is born.
       </p>
+
+      {/* Session Length Picker Modal */}
+      <SessionLengthPicker
+        isOpen={showSessionPicker}
+        onClose={handleSessionPickerClose}
+        onSelect={handleSessionSelect}
+      />
     </div>
   );
 }
