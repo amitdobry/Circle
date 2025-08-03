@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import socket from "../../socket";
 import { PanelConfig } from "./blockTypes";
 
@@ -19,13 +19,14 @@ export function usePanelLayoutConfig(userName: string) {
     };
   }, [userName]);
 
-  const fetchPanelLayout = () => {
+  // ✅ Memoize fetchPanelLayout so it doesn't change on every render
+  const fetchPanelLayout = useCallback(() => {
     const timestamp = Date.now();
     console.log(
       `[Client] 🚀 PANEL-REQUEST: Emitting request:panelConfig for ${userName} at ${timestamp}`
     );
     socket.emit("request:panelConfig", { userName });
-  };
+  }, [userName]); // Only recreate if userName changes
 
   return { panelConfig, fetchPanelLayout };
 }
