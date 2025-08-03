@@ -21,12 +21,14 @@ export default function SoulCirclePanel({
 }: Props) {
   const { panelConfig, fetchPanelLayout } = usePanelLayoutConfig(me);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log("[SoulCirclePanel] 🎯 MOUNT: Initial fetchPanelLayout for", me);
     fetchPanelLayout(); // on mount
-  }, [fetchPanelLayout, me]); // Added missing dependencies
+  }, []); // Added missing dependencies
 
   // 🔥 Listen for table updates and re-fetch config when needed
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const refreshUserList = () => {
       console.log(
@@ -70,7 +72,7 @@ export default function SoulCirclePanel({
       socket.off("live-speaker", refreshLiveSpeaker);
       socket.off("initial-pointer-map", refreshPointerMap);
     };
-  }, [fetchPanelLayout, me]); // Added missing dependencies
+  }, []);
 
   // const panelConfigTest = testPanel; // 🧪 skip socket for now
   // const panelConfigTest = testPanelAttention; // 🧪 skip socket for now
