@@ -27,10 +27,6 @@
     "start": "react-scripts start",
     "build": "set CI=false && react-scripts build",
     "test": "react-scripts test",
-    "test:panel-loop": "react-scripts test --testNamePattern='Panel Config.*Loop' --watchAll=false",
-    "test:panel-performance": "react-scripts test --testNamePattern='Panel Config Performance' --watchAll=false",
-    "monitor:panel-requests": "node ../monitor-panel-requests.js",
-    "test:panel-fix": "node ../test-panel-config-fix.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },

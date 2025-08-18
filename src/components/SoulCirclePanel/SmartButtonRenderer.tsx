@@ -9,6 +9,7 @@ type SmartButtonProps = {
     gestureCode?: string;
     actionType?: string;
     code?: string;
+    flavor?: string; // <-- NEW (for logs/analytics/UX)
     type:
       | "gesture"
       | "attentionTarget"
@@ -16,7 +17,7 @@ type SmartButtonProps = {
       | "listenerAction"
       | "semiListenerAction"
       | "listenerControl";
-    group?: "ear" | "brain" | "mouth";
+    group?: "ear" | "brain" | "mouth" | "blue";
     targetUser?: string;
     control?:
       | "interrupt"
@@ -86,6 +87,16 @@ export default function SmartButtonRenderer({
               actionType: config.actionType,
             });
             break;
+          case "disagree":
+            // Handle disagree action - send via clientEmits like other gesture actions
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group || "mouth",
+              subType: config.code,
+              actionType: config.actionType,
+            });
+            break;
+          // blueSelectStart
           // case "point":
           //   if (!config.targetUser) return;
           //   socket.emit("pointing", { from: me, to: config.targetUser });
@@ -172,6 +183,19 @@ export default function SmartButtonRenderer({
       case "listenerControl":
         switch (config.actionType) {
           case "interrupt":
+          case "blueSelectStart": {
+            // One unified envelope for the server router.
+            // control: "startPassMic" keeps it aligned with your naming elsewhere.
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group, // "blue"
+              control: "startPassMic", // semantic control (first step)
+              actionType: "blueSelectStart",
+              targetUser: null,
+              flavor: config.flavor, // optional; for logs/FX
+            });
+            break;
+          }
           case "startPassMic":
             break;
           case "wishToSpeakAfterMicDropped":
