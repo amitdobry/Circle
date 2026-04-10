@@ -119,17 +119,15 @@ export default function SoulCirclePanel({
                   <div
                     key={panelSection.id}
                     className="flex flex-row justify-center gap-2">
-                    {isMeLive && (
-                      <textarea
-                        value={userInput}
-                        onChange={handleLogInput}
-                        onKeyDown={handleLogKeyDown}
-                        className="w-full mt-2 bg-transparent outline-none resize-none text-[#3a2e22] font-semibold placeholder-[#7e715c] text-center text-[11px] sm:text-xs leading-tight"
-                        rows={1}
-                        style={{ maxHeight: "6rem" }}
-                        placeholder="Etch to glif here..."
-                      />
-                    )}
+                    <textarea
+                      value={userInput}
+                      onChange={handleLogInput}
+                      onKeyDown={handleLogKeyDown}
+                      className="w-full mt-2 bg-transparent outline-none resize-none text-[#3a2e22] font-semibold placeholder-[#7e715c] text-center text-[11px] sm:text-xs leading-tight"
+                      rows={1}
+                      style={{ maxHeight: "6rem" }}
+                      placeholder="Etch to glif here..."
+                    />
                     {panelSection.blocks.map((block) => (
                       <RenderBlock key={block.id} block={block} me={me} />
                     ))}

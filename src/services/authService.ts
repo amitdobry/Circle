@@ -63,7 +63,9 @@ class AuthService {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || "Registration failed");
+      const message =
+        data.errors?.length ? data.errors.join(", ") : data.message || "Registration failed";
+      throw new Error(message);
     }
 
     // Store token and user
