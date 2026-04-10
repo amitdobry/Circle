@@ -6,6 +6,7 @@ import LoginPage from "./LoginPage";
 import { SessionConfig } from "../utils/sessionConfig";
 import { authService } from "../services/authService";
 import socket from "../socket/index";
+import ActiveTables from "../components/ActiveTables";
 // import SessionLengthPicker from "../components/SessionLengthPicker";
 
 (window as any).APP_VERSION = APP_VERSION;
@@ -17,7 +18,7 @@ export default function HomePage() {
   const [isGuest, setIsGuest] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useTabSessions, setUseTabSessions] = useState(
-    SessionConfig.useTabSessions
+    SessionConfig.useTabSessions,
   );
   const [authCheckTrigger, setAuthCheckTrigger] = useState(0);
   // const [showSessionPicker, setShowSessionPicker] = useState(false);
@@ -66,7 +67,7 @@ export default function HomePage() {
     socket.once("join-approved", () => {
       console.log("✅ [HomePage] Join approved, navigating to room");
       navigate(
-        `/room?mode=participant&name=${encodeURIComponent(userProfile.name)}`
+        `/room?mode=participant&name=${encodeURIComponent(userProfile.name)}`,
       );
     });
 
@@ -145,7 +146,7 @@ export default function HomePage() {
         console.log(
           "📊 [HomePage] API Response status:",
           response.status,
-          response.ok
+          response.ok,
         );
 
         if (!response.ok) {
@@ -173,7 +174,7 @@ export default function HomePage() {
               hasAvatarId: !!data.avatarId,
               name: data.name,
               avatarId: data.avatarId,
-            }
+            },
           );
           navigate("/profile");
           return;
@@ -189,7 +190,7 @@ export default function HomePage() {
         setIsGuest(true);
       } finally {
         console.log(
-          "🏁 [HomePage] Auth check complete, setting loading to false"
+          "🏁 [HomePage] Auth check complete, setting loading to false",
         );
         setIsLoading(false);
       }
@@ -305,6 +306,9 @@ export default function HomePage() {
             🎬 Run Demo
           </button>
         </div>
+
+        {/* Active Tables Section */}
+        <ActiveTables />
 
         <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow max-w-2xl text-center text-gray-700">
           <h2 className="text-xl font-semibold mb-2">How It Works</h2>
