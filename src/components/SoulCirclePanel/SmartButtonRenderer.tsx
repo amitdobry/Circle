@@ -196,6 +196,15 @@ export default function SmartButtonRenderer({
             });
             break;
           }
+          case "earBlueSelectStart": {
+            socket.emit("clientEmits", {
+              name: me,
+              type: "blue",
+              actionType: "earBlueSelectStart",
+              flavor: config.flavor,
+            });
+            break;
+          }
           case "startPassMic":
             break;
           case "wishToSpeakAfterMicDropped":
@@ -239,7 +248,21 @@ export default function SmartButtonRenderer({
               targetUser: config.targetUser,
             });
             break;
-          case "acceptMicOfferFromPassTheMic":
+          case "bluePersonChosen":
+            socket.emit("clientEmits", {
+              name: me,
+              type: config.group, // "blue"
+              actionType: "bluePersonChosen",
+              targetUser: config.targetUser,
+            });
+            break;          case "earBluePersonChosen":
+            socket.emit("clientEmits", {
+              name: me,
+              type: "blue",
+              actionType: "earBluePersonChosen",
+              targetUser: config.targetUser,
+            });
+            break;          case "acceptMicOfferFromPassTheMic":
             socket.emit("clientEmits", {
               name: me,
               type: config.group,

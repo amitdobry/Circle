@@ -38,13 +38,15 @@ export type ButtonBlock = BaseBlock & {
     icon?: string;
     gestureCode?: string;
     actionType?: string;
+    flavor?: string;
     type:
       | "gesture"
       | "attentionTarget"
       | "speakerControl"
       | "listenerAction"
-      | "semiListenerAction";
-    group?: "ear" | "brain" | "mouth";
+      | "semiListenerAction"
+      | "listenerControl";
+    group?: "ear" | "brain" | "mouth" | "blue";
     targetUser?: string;
     control?: "interrupt" | "passMic" | "releaseMic" | "startPassMic";
     state?: string;
