@@ -85,6 +85,7 @@ function AppContent(): JSX.Element {
         <Route path="/" element={<HomePage />} />
         <Route path="/demo" element={<DemoPage />} />
         <Route path="/room" element={<TableView />} />
+        <Route path="/table/:tableId" element={<NamePrompt />} />
         <Route path="/name" element={<NamePrompt />} />
         <Route path="/profile" element={<ProfileSetup />} />
       </Routes>

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import socket from "../socket/index";
 import { AvatarInfo } from "../types/avatar";
 
 export default function NamePrompt() {
   const navigate = useNavigate();
+  const { tableId } = useParams<{ tableId?: string }>();
 
   const [name, setName] = useState("");
   const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null);
@@ -12,11 +13,31 @@ export default function NamePrompt() {
 
   const [showError, setShowError] = useState(false); // <-- NEW state for toast
   const [errorMessage, setErrorMessage] = useState(""); // <-- NEW!
+  const errorTimeoutRef = useRef<number | null>(null);
+
+  // Helper to show error with auto-hide
+  const showErrorMessage = useCallback((message: string) => {
+    // Clear any existing timeout
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+    }
+
+    setErrorMessage(message);
+    setShowError(true);
+
+    const timeout = window.setTimeout(() => {
+      setShowError(false);
+    }, 3000);
+
+    errorTimeoutRef.current = timeout;
+  }, []);
 
   // Fetch avatars on load
   useEffect(() => {
-    console.log("🔄 [NamePrompt] Requesting avatars from server...");
-    socket.emit("get-avatars");
+    console.log(
+      `🔄 [NamePrompt] Requesting avatars from server for table: ${tableId || "default-room"}...`,
+    );
+    socket.emit("get-avatars", { tableId: tableId || undefined });
 
     socket.on("avatars", (list) => {
       console.log("🎯 [NamePrompt] Received avatars from server:", list);
@@ -26,7 +47,7 @@ export default function NamePrompt() {
       }));
       console.log(
         "🖼️ [NamePrompt] Enriched avatars with local images:",
-        enriched
+        enriched,
       );
       setAvatars(enriched);
     });
@@ -34,30 +55,53 @@ export default function NamePrompt() {
     return () => {
       socket.off("avatars");
     };
-  }, []);
+  }, [tableId]); // Re-fetch if tableId changes
+
+  // Set up join response listeners
+  useEffect(() => {
+    const handleJoinApproved = () => {
+      console.log("✅ [NamePrompt] Join approved");
+      // Clear any error timeouts
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+      // Navigate to table room or default room
+      const targetRoute = tableId
+        ? `/room?mode=participant&name=${encodeURIComponent(name)}&tableId=${tableId}`
+        : `/room?mode=participant&name=${encodeURIComponent(name)}`;
+      navigate(targetRoute);
+    };
+
+    const handleJoinRejected = ({ reason }: { reason: string }) => {
+      console.log("🚫 [NamePrompt] Join rejected:", reason);
+      showErrorMessage(reason || "Unable to join. Please try again.");
+    };
+
+    socket.on("join-approved", handleJoinApproved);
+    socket.on("join-rejected", handleJoinRejected);
+
+    return () => {
+      socket.off("join-approved", handleJoinApproved);
+      socket.off("join-rejected", handleJoinRejected);
+    };
+  }, [tableId, name, navigate, showErrorMessage]);
 
   const handleJoin = () => {
     if (!name || !selectedAvatarId) {
       // ❌ Missing fields → show warning toast
-      setShowError(true);
-      setTimeout(() => setShowError(false), 3000);
+      showErrorMessage("Please enter your name and select an avatar");
       return;
     }
 
+    console.log(`🎯 [NamePrompt] Joining table: ${tableId || "default-room"}`);
+
     // 🔥 Ask server for permission
-    socket.emit("request-join", { name, avatarId: selectedAvatarId });
+    socket.emit("request-join", {
+      name,
+      avatarId: selectedAvatarId,
+      tableId: tableId || undefined, // Pass tableId if available
+    });
   };
-
-  socket.once("join-approved", () => {
-    navigate(`/room?mode=participant&name=${encodeURIComponent(name)}`);
-  });
-
-  socket.once("join-rejected", ({ reason }) => {
-    console.log("Join rejected:", reason);
-    setErrorMessage(reason || "Unable to join. Please try again.");
-    setShowError(true);
-    setTimeout(() => setShowError(false), 3000); // Hide after 3 sec
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-rose-100 text-gray-800 flex flex-col items-center justify-center px-4 py-12 relative">

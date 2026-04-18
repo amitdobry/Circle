@@ -259,13 +259,13 @@ export default function HomePage() {
             ? "Welcome to SoulCircle"
             : `Welcome back, ${userProfile?.name}!`}
         </h1>
-        <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl text-center">
+        <p className="text-lg md:text-xl text-gray-600 mb-4 max-w-2xl text-center">
           {isGuest
             ? "A sacred space for intentional presence. Speak when heard. Witness when listening. Align with the rhythm of many minds."
             : "Ready to join a circle? Choose your experience below."}
         </p>
 
-        <div className="flex flex-col md:flex-row gap-6 mb-12">
+        {/* <div className="flex flex-col md:flex-row gap-6">
           {isGuest ? (
             <>
               <button
@@ -305,7 +305,7 @@ export default function HomePage() {
             className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-lg shadow hover:from-purple-600 hover:to-pink-600 transition">
             🎬 Run Demo
           </button>
-        </div>
+        </div> */}
 
         {/* Active Tables Section */}
         <ActiveTables />

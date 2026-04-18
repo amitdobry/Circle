@@ -17,6 +17,15 @@ export default function TableView(): JSX.Element {
   const mode = queryParams.get("mode");
   const isParticipant = mode === "participant";
   const me = queryParams.get("name") || "Guest";
+  const tableId = queryParams.get("tableId"); // Extract tableId from query params
+  
+  // Log tableId for debugging
+  useEffect(() => {
+    if (tableId) {
+      console.log(`🎯 [TableView] Joined table: ${tableId}`);
+    }
+  }, [tableId]);
+  
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [pointerMap, setPointerMap] = useState<PointerMap>({});
   const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);

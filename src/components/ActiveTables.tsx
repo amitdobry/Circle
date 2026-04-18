@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { SOCKET_SERVER_URL } from "../config";
 import socket from "../socket/index";
+import { useTableDefinitions } from "../hooks/useTableDefinitions";
 import TableCard from "./TableCard";
 
 interface Room {
@@ -25,6 +26,12 @@ export default function ActiveTables() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { tables, fetchTableDefinitions } = useTableDefinitions();
+
+  // Fetch table definitions on mount
+  useEffect(() => {
+    fetchTableDefinitions();
+  }, [fetchTableDefinitions]);
 
   // Fetch active rooms
   const fetchRooms = async () => {
@@ -58,7 +65,7 @@ export default function ActiveTables() {
     return () => clearInterval(interval);
   }, []);
 
-  // Listen for socket updates (Phase 1: not implemented yet, but ready)
+  // Listen for socket updates
   useEffect(() => {
     const handleRoomsUpdate = (data: { rooms: Room[] }) => {
       console.log("🔄 [ActiveTables] Rooms updated via socket:", data);
@@ -72,9 +79,31 @@ export default function ActiveTables() {
     };
   }, []);
 
+  // Merge table definitions with runtime rooms
+  const mergedTables = tables.map((def) => {
+    const runtime = rooms.find((r) => r.roomId === def.tableId);
+    return {
+      ...def,
+      ...(runtime || {}),
+      // Provide defaults if no runtime
+      participantCount: runtime?.participantCount || 0,
+      maxCapacity: runtime?.maxCapacity || 8,
+      status: (runtime?.status || "waiting") as "active" | "waiting",
+      currentSpeaker: runtime?.currentSpeaker || null,
+      timer: runtime?.timer || { speakerTime: 0, sessionTime: 0 },
+    };
+  });
+
+  // Also include any runtime rooms that don't match definitions
+  const unmatchedRooms = rooms.filter(
+    (room) => !tables.some((def) => def.tableId === room.roomId),
+  );
+
+  const allTables = [...mergedTables, ...unmatchedRooms];
+
   if (loading) {
     return (
-      <div className="w-full max-w-6xl mx-auto py-8">
+      <div className="w-full max-w-6xl mx-auto pt-2 pb-8">
         <div className="text-center text-gray-500">
           <div className="animate-pulse">Loading active circles...</div>
         </div>
@@ -84,7 +113,7 @@ export default function ActiveTables() {
 
   if (error) {
     return (
-      <div className="w-full max-w-6xl mx-auto py-8">
+      <div className="w-full max-w-6xl mx-auto pt-2 pb-8">
         <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-center">
           {error}
         </div>
@@ -92,45 +121,55 @@ export default function ActiveTables() {
     );
   }
 
-  if (rooms.length === 0) {
-    return (
-      <div className="w-full max-w-6xl mx-auto py-8">
+  return (
+    <div className="w-full max-w-6xl mx-auto pt-2 pb-8">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+        {tables.length > 0
+          ? "Choose a Circle"
+          : `Active Soul Circles (${rooms.length})`}
+      </h2>
+
+      {allTables.length === 0 ? (
         <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow text-center text-gray-600">
           <p className="text-lg mb-2">✨ No active circles yet</p>
           <p className="text-sm text-gray-500">
             Be the first to start a circle!
           </p>
         </div>
-      </div>
-    );
-  }
+      ) : (
+        <>
+          {/* Vertical scrollable grid - shows 1 row at a time, max 3 cards */}
+          <div className="custom-scrollbar overflow-y-auto max-h-[280px] pr-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {allTables.map((table: any) => (
+                <TableCard
+                  key={table.tableId || table.roomId}
+                  tableId={table.tableId}
+                  name={table.name}
+                  icon={table.icon}
+                  description={table.description}
+                  roomId={table.roomId}
+                  sessionId={table.sessionId}
+                  participantCount={table.participantCount}
+                  maxCapacity={table.maxCapacity}
+                  status={table.status}
+                  currentSpeaker={table.currentSpeaker}
+                  timer={table.timer}
+                  createdAt={table.createdAt}
+                  // Remove legacy handlers - cards now handle navigation directly
+                  // onTakeSeat={handleTakeSeat}
+                  // onObserve={handleObserve}
+                />
+              ))}
+            </div>
+          </div>
 
-  return (
-    <div className="w-full max-w-6xl mx-auto py-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-        Active Soul Circles ({rooms.length})
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {rooms.map((room) => (
-          <TableCard
-            key={room.roomId}
-            roomId={room.roomId}
-            sessionId={room.sessionId}
-            participantCount={room.participantCount}
-            maxCapacity={room.maxCapacity}
-            status={room.status}
-            currentSpeaker={room.currentSpeaker}
-            timer={room.timer}
-            createdAt={room.createdAt}
-          />
-        ))}
-      </div>
-
-      <div className="mt-4 text-center text-xs text-gray-400">
-        <span className="inline-block animate-pulse">●</span> Live updates every
-        5 seconds
-      </div>
+          <div className="mt-4 text-center text-xs text-gray-400">
+            <span className="inline-block animate-pulse">●</span> Live updates
+            every 5 seconds
+          </div>
+        </>
+      )}
     </div>
   );
 }

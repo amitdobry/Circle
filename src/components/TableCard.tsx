@@ -1,8 +1,16 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface TableCardProps {
-  roomId: string;
-  sessionId: string;
+  // Table definition (static)
+  tableId?: string;
+  name?: string;
+  icon?: string;
+  description?: string;
+  
+  // Runtime state (dynamic)
+  roomId?: string;
+  sessionId?: string;
   participantCount: number;
   maxCapacity: number;
   status: "active" | "waiting";
@@ -15,11 +23,17 @@ interface TableCardProps {
     speakerTime: number;
     sessionTime: number;
   };
-  createdAt: string;
+  createdAt?: string;
   onJoin?: () => void;
+  onTakeSeat?: () => void;
+  onObserve?: () => void;
 }
 
 export default function TableCard({
+  tableId,
+  name,
+  icon,
+  description,
   roomId,
   participantCount,
   maxCapacity,
@@ -27,7 +41,10 @@ export default function TableCard({
   currentSpeaker,
   timer,
   onJoin,
+  onTakeSeat,
+  onObserve,
 }: TableCardProps) {
+  const navigate = useNavigate();
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -47,10 +64,22 @@ export default function TableCard({
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow border border-emerald-200 hover:border-emerald-400 transition min-w-[200px]">
-      {/* Room ID Badge */}
-      <div className="text-xs font-mono text-gray-500 mb-2 truncate">
-        {roomId}
-      </div>
+      {/* Table Name & Icon (if available) OR Room ID */}
+      {name && icon ? (
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">{icon}</span>
+          <h3 className="text-base font-bold text-gray-800 truncate">{name}</h3>
+        </div>
+      ) : (
+        <div className="text-xs font-mono text-gray-500 mb-2 truncate">
+          {roomId}
+        </div>
+      )}
+
+      {/* Description (if available) */}
+      {description && (
+        <p className="text-xs text-gray-600 mb-3 line-clamp-2">{description}</p>
+      )}
 
       {/* Participants */}
       <div className="flex items-center gap-1 mb-3">
@@ -87,7 +116,7 @@ export default function TableCard({
       </div>
 
       {/* Status Badge */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <span
           className={`text-xs px-2 py-1 rounded-full ${
             status === "active"
@@ -96,16 +125,35 @@ export default function TableCard({
           }`}>
           {status === "active" ? "🟢 Active" : "⏸️ Waiting"}
         </span>
-
-        {/* Join Button (future) */}
-        {onJoin && (
-          <button
-            onClick={onJoin}
-            className="text-xs px-3 py-1 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition">
-            Join
-          </button>
-        )}
       </div>
+
+      {/* Action Buttons */}
+      {tableId ? (
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/table/${tableId}`)}
+            className="flex-1 px-3 py-2 rounded-lg bg-emerald-500 text-white font-semibold text-sm shadow hover:bg-emerald-600 transition">
+            Join Circle
+          </button>
+        </div>
+      ) : (onTakeSeat || onObserve) && (
+        <div className="flex gap-2">
+          {onTakeSeat && (
+            <button
+              onClick={onTakeSeat}
+              className="flex-1 px-3 py-2 rounded-lg bg-emerald-500 text-white font-semibold text-sm shadow hover:bg-emerald-600 transition">
+              Take a Seat
+            </button>
+          )}
+          {onObserve && (
+            <button
+              onClick={onObserve}
+              className="flex-1 px-3 py-2 rounded-lg bg-white text-emerald-600 border border-emerald-300 font-semibold text-sm shadow hover:bg-emerald-50 transition">
+              Observe
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
