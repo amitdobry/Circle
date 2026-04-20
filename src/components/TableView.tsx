@@ -349,9 +349,16 @@ export default function TableView(): JSX.Element {
       <button
         onClick={() => {
           console.log(`👋 ${me} leaving table...`);
-          socket.emit("leave", { name: me });
-          clearTableSession();
-          navigate("/");
+          // Emit leave event and wait for it to be sent before navigating
+          socket.emit("leave", { name: me }, () => {
+            console.log("✅ Leave event acknowledged by server");
+          });
+          
+          // Small delay to ensure socket event is sent before navigation
+          setTimeout(() => {
+            clearTableSession();
+            navigate("/");
+          }, 100); // 100ms delay
         }}
         className="absolute top-4 left-4 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 z-50 flex items-center gap-2"
         aria-label="Leave table">
