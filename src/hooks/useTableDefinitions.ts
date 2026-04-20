@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import socket from "../socket/index";
 
 export type TableDefinition = {
@@ -29,11 +29,11 @@ export function useTableDefinitions() {
     };
   }, []);
 
-  // Function to request table definitions from server
-  const fetchTableDefinitions = () => {
+  // ✅ FIX: Memoize to prevent infinite loop in dependent useEffects
+  const fetchTableDefinitions = useCallback(() => {
     console.log("[Client] Emitting request:tableDefinitions");
     socket.emit("request:tableDefinitions");
-  };
+  }, []); // Empty deps = stable reference
 
   return { tables, loading, fetchTableDefinitions };
 }

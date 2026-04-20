@@ -2,14 +2,26 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import socket from "../socket/index";
 import { AvatarInfo } from "../types/avatar";
+import { getOrCreateUserId, clearUserId } from "../utils/userId";
+import {
+  getTableSession,
+  saveTableSession,
+  clearTableSession,
+  TableSession,
+} from "../utils/tableSession";
 
 export default function NamePrompt() {
   const navigate = useNavigate();
   const { tableId } = useParams<{ tableId?: string }>();
 
+  const [userId] = useState<string>(() => getOrCreateUserId());
   const [name, setName] = useState("");
   const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null);
   const [avatars, setAvatars] = useState<AvatarInfo[]>([]);
+  const [existingSession, setExistingSession] = useState<TableSession | null>(
+    null,
+  );
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
 
   const [showError, setShowError] = useState(false); // <-- NEW state for toast
   const [errorMessage, setErrorMessage] = useState(""); // <-- NEW!
@@ -30,6 +42,16 @@ export default function NamePrompt() {
     }, 3000);
 
     errorTimeoutRef.current = timeout;
+  }, []);
+
+  // Check for existing session on mount
+  useEffect(() => {
+    const session = getTableSession();
+    if (session) {
+      console.log(`👻 [NamePrompt] Found existing session:`, session);
+      setExistingSession(session);
+      setShowResumePrompt(true);
+    }
   }, []);
 
   // Fetch avatars on load
@@ -65,6 +87,18 @@ export default function NamePrompt() {
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current);
       }
+
+      // Save session for reconnection
+      const roomId = tableId || "default-room";
+      saveTableSession({
+        userId,
+        displayName: name,
+        avatarId: selectedAvatarId!,
+        roomId,
+        tableId: tableId || "default-room",
+        joinedAt: Date.now(),
+      });
+
       // Navigate to table room or default room
       const targetRoute = tableId
         ? `/room?mode=participant&name=${encodeURIComponent(name)}&tableId=${tableId}`
@@ -77,14 +111,38 @@ export default function NamePrompt() {
       showErrorMessage(reason || "Unable to join. Please try again.");
     };
 
+    const handleReconnectSuccess = (snapshot: any) => {
+      console.log("✅ [NamePrompt] Reconnect successful:", snapshot);
+      // Navigate to table with reconnected session
+      const targetRoute = snapshot.tableId
+        ? `/room?mode=participant&name=${encodeURIComponent(snapshot.me.displayName)}&tableId=${snapshot.tableId}`
+        : `/room?mode=participant&name=${encodeURIComponent(snapshot.me.displayName)}`;
+      navigate(targetRoute);
+    };
+
+    const handleReconnectFailed = ({ reason }: { reason: string }) => {
+      console.log("❌ [NamePrompt] Reconnect failed:", reason);
+      clearTableSession();
+      clearUserId(); // Clear userId for fresh start
+      setExistingSession(null);
+      setShowResumePrompt(false);
+      showErrorMessage(reason || "Session expired. Please join again.");
+      // Reload to get new userId
+      setTimeout(() => window.location.reload(), 2000); // Wait for error message
+    };
+
     socket.on("join-approved", handleJoinApproved);
     socket.on("join-rejected", handleJoinRejected);
+    socket.on("reconnect-success", handleReconnectSuccess);
+    socket.on("reconnect-failed", handleReconnectFailed);
 
     return () => {
       socket.off("join-approved", handleJoinApproved);
       socket.off("join-rejected", handleJoinRejected);
+      socket.off("reconnect-success", handleReconnectSuccess);
+      socket.off("reconnect-failed", handleReconnectFailed);
     };
-  }, [tableId, name, navigate, showErrorMessage]);
+  }, [tableId, name, selectedAvatarId, userId, navigate, showErrorMessage]);
 
   const handleJoin = () => {
     if (!name || !selectedAvatarId) {
@@ -97,14 +155,70 @@ export default function NamePrompt() {
 
     // 🔥 Ask server for permission
     socket.emit("request-join", {
+      userId, // Include stable userId
       name,
       avatarId: selectedAvatarId,
       tableId: tableId || undefined, // Pass tableId if available
     });
   };
 
+  const handleReconnect = () => {
+    if (!existingSession) return;
+
+    console.log(`🔄 [NamePrompt] Attempting reconnection:`, existingSession);
+
+    socket.emit("request-reconnect", {
+      userId: existingSession.userId,
+      tableId: existingSession.tableId,
+    });
+
+    setShowResumePrompt(false);
+  };
+
+  const handleStartFresh = () => {
+    console.log(`🆕 [NamePrompt] Starting fresh session`);
+    clearTableSession();
+    clearUserId(); // Clear userId to get a brand new identity
+    setExistingSession(null);
+    setShowResumePrompt(false);
+    // Refresh to get new userId
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-rose-100 text-gray-800 flex flex-col items-center justify-center px-4 py-12 relative">
+      {/* Resume Prompt Modal */}
+      {showResumePrompt && existingSession && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
+            <div className="text-center mb-4">
+              <div className="text-4xl mb-2">👻</div>
+              <h2 className="text-2xl font-bold mb-2">Resume Session?</h2>
+              <p className="text-gray-600">
+                You were in{" "}
+                <span className="font-semibold">{existingSession.roomId}</span>{" "}
+                as{" "}
+                <span className="font-semibold">
+                  {existingSession.displayName}
+                </span>
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleReconnect}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-lg font-medium transition-colors">
+                🔄 Resume
+              </button>
+              <button
+                onClick={handleStartFresh}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-3 rounded-lg font-medium transition-colors">
+                🆕 Start Fresh
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold mb-4">Join the Circle</h1>
 
       <input

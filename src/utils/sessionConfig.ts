@@ -1,6 +1,8 @@
 // Global session configuration for testing
 export const SessionConfig = {
-  useTabSessions: false,
+  // ✅ FIX: Use tab-scoped sessions to prevent multi-tab userId conflicts
+  // Each tab gets independent userId/session in sessionStorage
+  useTabSessions: true,
 
   getToken(): string | null {
     const token = this.useTabSessions

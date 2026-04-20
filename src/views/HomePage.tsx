@@ -46,6 +46,7 @@ export default function HomePage() {
   };
 
   // Handle logged-in user joining the circle
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleJoinAsLoggedUser = () => {
     if (!userProfile?.name || !userProfile?.avatarId) {
       console.error("❌ Cannot join: Missing name or avatar");
@@ -78,6 +79,7 @@ export default function HomePage() {
   };
 
   // Handle guest joining (auto-start session on server)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleJoinAsGuest = async () => {
     // Simply navigate to name selection - server will auto-start 60min session when first user joins
     navigate("/name");

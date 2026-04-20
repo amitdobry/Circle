@@ -7,6 +7,7 @@ import { GliffMessage } from "../types/gliffMessage";
 import GliffLog from "./GliffMessageComponent/GliffLog";
 import SessionTimer from "./SessionTimer";
 import SessionLengthPicker from "./SessionLengthPicker";
+import { clearTableSession } from "../utils/tableSession";
 
 type PointerMap = Record<string, string>;
 
@@ -18,14 +19,14 @@ export default function TableView(): JSX.Element {
   const isParticipant = mode === "participant";
   const me = queryParams.get("name") || "Guest";
   const tableId = queryParams.get("tableId"); // Extract tableId from query params
-  
+
   // Log tableId for debugging
   useEffect(() => {
     if (tableId) {
       console.log(`🎯 [TableView] Joined table: ${tableId}`);
     }
   }, [tableId]);
-  
+
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [pointerMap, setPointerMap] = useState<PointerMap>({});
   const [liveSpeakerName, setLiveSpeakerName] = useState<string | null>(null);
@@ -98,6 +99,7 @@ export default function TableView(): JSX.Element {
     Chipmunks: process.env.PUBLIC_URL + "/avatars/avatar-Chipmunks.png",
     BabyDragon: process.env.PUBLIC_URL + "/avatars/avatar-BabyDragon.png",
     Baby: process.env.PUBLIC_URL + "/avatars/avatar-Baby.png",
+    Ghost: process.env.PUBLIC_URL + "/avatars/avatar-Ghost.png",
   };
 
   useEffect(() => {
@@ -184,7 +186,7 @@ export default function TableView(): JSX.Element {
         if (from === me) {
           // setSelectedTarget(to); // Keeps UI logic synced
         }
-      }
+      },
     );
 
     socket.on("action-log", (msg: string) => {
@@ -216,7 +218,7 @@ export default function TableView(): JSX.Element {
       (entry: { userName: string; text: string; timestamp: number }) => {
         setTextLogs((prev) => [...prev, entry]);
         console.log("[TextLog]", entry);
-      }
+      },
     );
 
     socket.on(
@@ -225,7 +227,7 @@ export default function TableView(): JSX.Element {
         const map: PointerMap = {};
         for (const { from, to } of entries) map[from] = to;
         setPointerMap(map);
-      }
+      },
     );
 
     socket.on("live-speaker", ({ name }: { name: string }) => {
@@ -294,14 +296,24 @@ export default function TableView(): JSX.Element {
       }
     }
   }, [isParticipant, me, participants]); // Added participants to dependencies
+
+  // ❌ REMOVED: Do NOT emit leave on beforeunload/refresh
+  // Page refresh should trigger disconnect → GHOST, not leave → removed
+  // Only explicit user actions (button clicks) should emit leave
+
+  // Handle session-ended and explicit leave navigation
   useEffect(() => {
-    const handleUnload = () => {
-      socket.emit("leave", { name: me });
+    const handleNavigateHome = () => {
+      // Clear session when forced to navigate home (session ended)
+      clearTableSession();
     };
 
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-  }, [me]);
+    socket.on("force-navigate-home", handleNavigateHome);
+
+    return () => {
+      socket.off("force-navigate-home", handleNavigateHome);
+    };
+  }, []);
 
   const handleLogInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -333,6 +345,20 @@ export default function TableView(): JSX.Element {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-start text-gray-800">
+      {/* Leave Button - Top Left Corner */}
+      <button
+        onClick={() => {
+          console.log(`👋 ${me} leaving table...`);
+          socket.emit("leave", { name: me });
+          clearTableSession();
+          navigate("/");
+        }}
+        className="absolute top-4 left-4 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 z-50 flex items-center gap-2"
+        aria-label="Leave table">
+        <span className="text-lg">←</span>
+        <span className="hidden sm:inline">Leave</span>
+      </button>
+
       {/* <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 mt-2 sm:mt-3 text-center z-20"> */}
       <div className="h-6 w-full flex justify-center items-center transition-opacity duration-700 mt-1 mb-2">
         <span
@@ -377,25 +403,36 @@ export default function TableView(): JSX.Element {
           const isLive = user.name === liveSpeakerName;
           const isPointingAtSelf = pointerMap[user.name] === user.name;
           positions[user.name] = { x, y };
+          const isGhost =
+            (user as any).presence === "GHOST" ||
+            (user as any).state === "ghost";
 
           return (
             <div
               key={user.name}
-              className="absolute flex flex-col items-center text-center z-10 transition-transform"
+              className={`absolute flex flex-col items-center text-center z-10 transition-all ${
+                isGhost ? "opacity-50" : ""
+              }`}
               style={{ transform: `translate(${x}px, ${y}px)` }}>
               <div className="font-semibold text-xs sm:text-sm mb-1 truncate max-w-[80px]">
                 {user.name}
+                {isGhost && " 👻"}
               </div>
               <div
                 className={`w-14 h-14 sm:w-24 sm:h-24 rounded-full overflow-hidden relative border-4 shadow-lg ${
                   isMe
                     ? "border-emerald-600 ring-4 ring-emerald-300"
-                    : "border-white"
+                    : isGhost
+                      ? "border-gray-400 opacity-60"
+                      : "border-white"
                 }`}>
                 <img
                   src={
-                    avatarMap[user.avatarId] ||
-                    `${process.env.PUBLIC_URL}/avatars/avatar-monk.png`
+                    isGhost
+                      ? avatarMap["Ghost"] ||
+                        `${process.env.PUBLIC_URL}/avatars/avatar-Ghost.png`
+                      : avatarMap[user.avatarId] ||
+                        `${process.env.PUBLIC_URL}/avatars/avatar-monk.png`
                   }
                   alt={user.name}
                   className="w-full h-full object-cover"
