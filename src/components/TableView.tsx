@@ -52,6 +52,7 @@ export default function TableView(): JSX.Element {
   const [glowKey, setGlowKey] = useState(0);
   const [fadeKey, setFadeKey] = useState(0);
   const [showSessionPicker, setShowSessionPicker] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   const [prompt, setPrompt] = useState<{
     icon: string;
@@ -348,22 +349,31 @@ export default function TableView(): JSX.Element {
       {/* Leave Button - Top Left Corner */}
       <button
         onClick={() => {
+          if (isLeaving) return; // Prevent double-click
+
           console.log(`👋 ${me} leaving table...`);
-          // Emit leave event and wait for it to be sent before navigating
-          socket.emit("leave", { name: me }, () => {
-            console.log("✅ Leave event acknowledged by server");
+          setIsLeaving(true);
+
+          socket.emit("leave", { name: me, tableId }, (response: any) => {
+            console.log("✅ Leave confirmed by server", response);
+
+            if (response?.success) {
+              clearTableSession();
+              navigate("/");
+            } else {
+              console.error("❌ Leave failed", response);
+              setIsLeaving(false);
+              alert("Failed to leave table. Please try again.");
+            }
           });
-          
-          // Small delay to ensure socket event is sent before navigation
-          setTimeout(() => {
-            clearTableSession();
-            navigate("/");
-          }, 100); // 100ms delay
         }}
-        className="absolute top-4 left-4 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 z-50 flex items-center gap-2"
+        disabled={isLeaving}
+        className={`absolute top-4 left-4 px-4 py-2 ${isLeaving ? "bg-rose-400 cursor-not-allowed" : "bg-rose-500 hover:bg-rose-600"} text-white font-semibold rounded-lg shadow-md transition-colors duration-200 z-50 flex items-center gap-2`}
         aria-label="Leave table">
         <span className="text-lg">←</span>
-        <span className="hidden sm:inline">Leave</span>
+        <span className="hidden sm:inline">
+          {isLeaving ? "Leaving..." : "Leave"}
+        </span>
       </button>
 
       {/* <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 mt-2 sm:mt-3 text-center z-20"> */}
