@@ -134,6 +134,18 @@ export default function SoulCirclePanel({
                   </div>
                 );
 
+              case "speakerPanelAction":
+                // Speaker action panels (e.g., pass mic selection) - no textarea
+                return (
+                  <div
+                    key={panelSection.id}
+                    className="flex flex-wrap justify-center gap-2">
+                    {panelSection.blocks.map((block) => (
+                      <RenderBlock key={block.id} block={block} me={me} />
+                    ))}
+                  </div>
+                );
+
               default:
                 return (
                   <div

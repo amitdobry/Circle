@@ -63,6 +63,7 @@ export type PanelSection = {
   layout?: "row" | "column";
   panelType?:
     | "speakerPanel"
+    | "speakerPanelAction"
     | "attentionPanel"
     | "thinkingPanel"
     | "listenerSyncPanel";
