@@ -82,7 +82,7 @@ export default function ProfileSetup() {
     } catch (error) {
       console.error("Profile update failed:", error);
       setErrorMessage(
-        error instanceof Error ? error.message : "Failed to save profile"
+        error instanceof Error ? error.message : "Failed to save profile",
       );
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
@@ -108,36 +108,38 @@ export default function ProfileSetup() {
       />
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-5xl mx-auto mb-6">
-        {(isMobile && !showAllAvatars ? avatars.slice(0, 6) : avatars).map((avatar) => {
-          const isTaken = Boolean(avatar.takenBy);
-          const isSelected = selectedAvatarId === avatar.id;
+        {(isMobile && !showAllAvatars ? avatars.slice(0, 6) : avatars).map(
+          (avatar) => {
+            const isTaken = Boolean(avatar.takenBy);
+            const isSelected = selectedAvatarId === avatar.id;
 
-          return (
-            <button
-              key={avatar.id}
-              onClick={() =>
-                !isTaken && !isLoading ? setSelectedAvatarId(avatar.id) : null
-              }
-              disabled={isTaken || isLoading}
-              className={`flex flex-col items-center p-3 rounded-xl shadow transition-transform
+            return (
+              <button
+                key={avatar.id}
+                onClick={() =>
+                  !isTaken && !isLoading ? setSelectedAvatarId(avatar.id) : null
+                }
+                disabled={isTaken || isLoading}
+                className={`flex flex-col items-center p-3 rounded-xl shadow transition-transform
                 ${
                   isTaken || isLoading
                     ? "bg-gray-200 opacity-50 cursor-not-allowed"
                     : "bg-white hover:scale-105 hover:shadow-lg"
                 }
                 ${isSelected ? "ring-4 ring-emerald-400" : ""}`}>
-              <img
-                src={avatar.image}
-                alt={avatar.id}
-                className="w-20 h-20 rounded-full object-cover mb-2"
-              />
-              <span className="text-sm font-medium">
-                {avatar.id}
-                {isTaken ? " ❌" : ""}
-              </span>
-            </button>
-          );
-        })}
+                <img
+                  src={avatar.image}
+                  alt={avatar.id}
+                  className="w-20 h-20 rounded-full object-cover mb-2"
+                />
+                <span className="text-sm font-medium">
+                  {avatar.id}
+                  {isTaken ? " ❌" : ""}
+                </span>
+              </button>
+            );
+          },
+        )}
       </div>
 
       {/* More button for mobile */}

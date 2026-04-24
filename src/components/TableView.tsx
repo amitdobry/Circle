@@ -557,20 +557,18 @@ export default function TableView(): JSX.Element {
       <div
         className={`
           w-full px-2
-          ${isMobile ? 'fixed bottom-0 left-0 right-0 z-40' : 'mt-[32px] sm:mt-[20px]'}
-          ${isMobile ? (isPanelExpanded ? 'h-[40vh]' : 'h-[80px]') : ''}
-          ${isMobile ? 'transition-all duration-300 ease-in-out' : ''}
+          ${isMobile ? "fixed bottom-0 left-0 right-0 z-40" : "mt-[32px] sm:mt-[20px]"}
+          ${isMobile ? (isPanelExpanded ? "h-[40vh]" : "h-[80px]") : ""}
+          ${isMobile ? "transition-all duration-300 ease-in-out" : ""}
         `}
         onTouchStart={handlePanelTouchStart}
         onTouchMove={handlePanelTouchMove}
-        onClick={handlePanelTap}
-      >
+        onClick={handlePanelTap}>
         <div
           className={`
             max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2
-            ${isMobile ? 'shadow-2xl rounded-t-2xl rounded-b-none h-full overflow-y-auto' : ''}
-          `}
-        >
+            ${isMobile ? "shadow-2xl rounded-t-2xl rounded-b-none h-full overflow-y-auto" : ""}
+          `}>
           {isParticipant && (
             <SoulCirclePanel
               me={me}
