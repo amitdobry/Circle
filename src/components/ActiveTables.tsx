@@ -140,7 +140,7 @@ export default function ActiveTables() {
         <>
           {/* Vertical scrollable grid - shows 1 row at a time, max 3 cards */}
           <div className="custom-scrollbar overflow-y-auto max-h-[280px] pr-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {allTables.map((table: any) => (
                 <TableCard
                   key={table.tableId || table.roomId}

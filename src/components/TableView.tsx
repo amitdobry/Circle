@@ -53,6 +53,8 @@ export default function TableView(): JSX.Element {
   const [fadeKey, setFadeKey] = useState(0);
   const [showSessionPicker, setShowSessionPicker] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [isPanelExpanded, setIsPanelExpanded] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
 
   const [prompt, setPrompt] = useState<{
     icon: string;
@@ -340,6 +342,34 @@ export default function TableView(): JSX.Element {
     }
   };
 
+  // Touch handlers for mobile bottom sheet panel
+  const handlePanelTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handlePanelTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+
+    const touchY = e.touches[0].clientY;
+    const deltaY = touchY - touchStartY;
+
+    // Swipe down to collapse (when expanded)
+    if (deltaY > 50 && isPanelExpanded) {
+      setIsPanelExpanded(false);
+    }
+
+    // Swipe up to expand (when collapsed)
+    if (deltaY < -50 && !isPanelExpanded) {
+      setIsPanelExpanded(true);
+    }
+  };
+
+  const handlePanelTap = () => {
+    if (isMobile) {
+      setIsPanelExpanded(!isPanelExpanded);
+    }
+  };
+
   const radiusX = svgCenter.x * (isMobile ? 0.85 : 1.1);
   const radiusY = svgCenter.y * (isMobile ? 0.8 : 0.95);
   const positions: Record<string, { x: number; y: number }> = {};
@@ -523,8 +553,24 @@ export default function TableView(): JSX.Element {
         </div>
       </div>
 
-      <div className="w-full px-2 mt-[32px] sm:mt-[20px]">
-        <div className="max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2">
+      {/* Mobile Bottom Sheet Panel (max-width: 768px) */}
+      <div
+        className={`
+          w-full px-2
+          ${isMobile ? 'fixed bottom-0 left-0 right-0 z-40' : 'mt-[32px] sm:mt-[20px]'}
+          ${isMobile ? (isPanelExpanded ? 'h-[40vh]' : 'h-[80px]') : ''}
+          ${isMobile ? 'transition-all duration-300 ease-in-out' : ''}
+        `}
+        onTouchStart={handlePanelTouchStart}
+        onTouchMove={handlePanelTouchMove}
+        onClick={handlePanelTap}
+      >
+        <div
+          className={`
+            max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2
+            ${isMobile ? 'shadow-2xl rounded-t-2xl rounded-b-none h-full overflow-y-auto' : ''}
+          `}
+        >
           {isParticipant && (
             <SoulCirclePanel
               me={me}
@@ -558,7 +604,7 @@ export default function TableView(): JSX.Element {
       )}
 
       {/* <p className="mt-6 text-sm text-gray-500 text-center max-w-sm"> */}
-      <p className="mt-8 mb-12 text-sm text-gray-500 text-center max-w-sm">
+      <p className="mt-8 mb-12 text-sm text-gray-500 text-center max-w-sm hidden md:block">
         Choose one to listen to. When all align, a voice is born.
       </p>
 

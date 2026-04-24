@@ -11,6 +11,8 @@ export default function ProfileSetup() {
   const [name, setName] = useState("");
   const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null);
   const [avatars, setAvatars] = useState<AvatarInfo[]>([]);
+  const [showAllAvatars, setShowAllAvatars] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isLoading, setIsLoading] = useState(false);
 
   const [showError, setShowError] = useState(false);
@@ -27,8 +29,15 @@ export default function ProfileSetup() {
       setAvatars(enriched);
     });
 
+    // Mobile detection
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+
     return () => {
       socket.off("avatars");
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -99,7 +108,7 @@ export default function ProfileSetup() {
       />
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 max-w-5xl mx-auto mb-6">
-        {avatars.map((avatar) => {
+        {(isMobile && !showAllAvatars ? avatars.slice(0, 6) : avatars).map((avatar) => {
           const isTaken = Boolean(avatar.takenBy);
           const isSelected = selectedAvatarId === avatar.id;
 
@@ -130,6 +139,16 @@ export default function ProfileSetup() {
           );
         })}
       </div>
+
+      {/* More button for mobile */}
+      {isMobile && !showAllAvatars && avatars.length > 6 && (
+        <button
+          onClick={() => setShowAllAvatars(true)}
+          disabled={isLoading}
+          className="mb-6 px-6 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium shadow hover:bg-gray-300 transition disabled:opacity-50">
+          More Avatars →
+        </button>
+      )}
 
       <div className="flex gap-4">
         <button

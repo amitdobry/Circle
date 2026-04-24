@@ -206,8 +206,8 @@ export default function HomePage() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-rose-100 text-gray-800 flex flex-col items-center justify-center px-4 py-12">
         {/* Header with Login/Profile */}
         <div className="absolute top-6 right-6 flex items-center gap-3">
-          {/* Session Mode Toggle (Dev Tool) */}
-          <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-purple-100/70 backdrop-blur-sm text-purple-700 border border-purple-300 text-xs">
+          {/* Session Mode Toggle (Dev Tool) - Hidden on mobile */}
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-purple-100/70 backdrop-blur-sm text-purple-700 border border-purple-300 text-xs">
             <span>{useTabSessions ? "🔗 Tab" : "🌐 Global"}:</span>
             <button
               onClick={handleSessionModeToggle}
@@ -312,7 +312,7 @@ export default function HomePage() {
         {/* Active Tables Section */}
         <ActiveTables />
 
-        <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow max-w-2xl text-center text-gray-700">
+        <div className="bg-white/70 backdrop-blur-md rounded-xl p-6 shadow max-w-2xl text-center text-gray-700 mt-6 md:mt-8">
           <h2 className="text-xl font-semibold mb-2">How It Works</h2>
           <p className="text-sm mb-1">
             ✦ Join a circle as an observer or participant.
