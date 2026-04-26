@@ -25,14 +25,14 @@ function collapseStream(entries: GliffMessage[]): JSX.Element[] {
   for (let i = 0; i < entries.length; i++) {
     const { userName, message } = entries[i];
 
-    // 🆕 Handle "context" messages (round questions) - simple text like regular messages
+    // 🆕 Handle "context" messages (round questions) - just the question text
     if (message.messageType === "context") {
       flush(`flush-before-context-${i}`); // Flush any ongoing text
 
       parts.push(
         <div key={`context-${i}`} className="w-full mb-3">
           <div className="whitespace-pre-wrap mb-1 font-semibold">
-            <b>{userName}</b>: {message.content}
+            {message.content}
           </div>
           <div className="border-b border-gray-300 my-2"></div>
         </div>,
