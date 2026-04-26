@@ -1,4 +1,10 @@
-export type BlockType = "text" | "emoji" | "spacer" | "button";
+export type BlockType =
+  | "text"
+  | "emoji"
+  | "spacer"
+  | "button"
+  | "subjectSelection"
+  | "roundDisplay";
 
 export type BaseBlock = {
   id: string;
@@ -53,7 +59,34 @@ export type ButtonBlock = BaseBlock & {
   };
 };
 
-export type PanelBlock = TextBlock | EmojiBlock | SpacerBlock | ButtonBlock;
+export type SubjectSelectionBlock = BaseBlock & {
+  type: "subjectSelection";
+  subjects: Array<{
+    key: string;
+    label: string;
+    description: string;
+  }>;
+  selectedSubject: string | null;
+  hasVoted: boolean;
+};
+
+export type RoundDisplayBlock = BaseBlock & {
+  type: "roundDisplay";
+  roundNumber: number;
+  glyphText: string;
+  subjectKey: string;
+  userIsReady: boolean;
+  readyCount: number;
+  totalCount: number;
+};
+
+export type PanelBlock =
+  | TextBlock
+  | EmojiBlock
+  | SpacerBlock
+  | ButtonBlock
+  | SubjectSelectionBlock
+  | RoundDisplayBlock;
 
 export type PanelConfig = PanelSection[];
 

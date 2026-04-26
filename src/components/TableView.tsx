@@ -8,6 +8,8 @@ import GliffLog from "./GliffMessageComponent/GliffLog";
 import SessionTimer from "./SessionTimer";
 import SessionLengthPicker from "./SessionLengthPicker";
 import { clearTableSession } from "../utils/tableSession";
+import RoundQuestion from "./RoundQuestion";
+import RoundReadinessRow from "./RoundReadinessRow";
 
 type PointerMap = Record<string, string>;
 
@@ -55,6 +57,21 @@ export default function TableView(): JSX.Element {
   const [isLeaving, setIsLeaving] = useState(false);
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
   const [touchStartY, setTouchStartY] = useState(0);
+
+  // Content Phase & Rounds state
+  const [roundData, setRoundData] = useState<{
+    roundId: string;
+    roundNumber: number;
+    glyphText: string;
+    subjectKey: string;
+    status: "active" | "ended";
+  } | null>(null);
+
+  const [readinessData, setReadinessData] = useState<{
+    readyCount: number;
+    totalCount: number;
+    readyUserIds: string[];
+  } | null>(null);
 
   const [prompt, setPrompt] = useState<{
     icon: string;
@@ -149,6 +166,35 @@ export default function TableView(): JSX.Element {
       navigate("/");
     });
 
+    // Content Phase & Rounds: Round state updates
+    socket.on(
+      "round:state",
+      (data: {
+        roundId: string;
+        roundNumber: number;
+        glyphText: string;
+        subjectKey: string;
+        status: "active" | "ended";
+      }) => {
+        console.log("🔮 [Round] State update:", data);
+        setRoundData(data);
+      },
+    );
+
+    // Content Phase & Rounds: Readiness updates
+    socket.on(
+      "round:readiness",
+      (data: { ready: number; total: number; readyUserIds: string[] }) => {
+        console.log("✅ [Round] Readiness update:", data);
+        // Map backend property names to frontend expectations
+        setReadinessData({
+          readyCount: data.ready,
+          totalCount: data.total,
+          readyUserIds: data.readyUserIds,
+        });
+      },
+    );
+
     return () => {
       socket.off("gliffLog:update");
       socket.off("show-session-picker");
@@ -157,6 +203,8 @@ export default function TableView(): JSX.Element {
       socket.off("session-started");
       socket.off("session-ended");
       socket.off("force-navigate-home");
+      socket.off("round:state");
+      socket.off("round:readiness");
     };
   }, [navigate]);
 
@@ -538,6 +586,14 @@ export default function TableView(): JSX.Element {
             );
           })}
         </svg>
+
+        {/* Round Question Display - overlays the circle center during active rounds */}
+        {roundData && roundData.status === "active" && (
+          <RoundQuestion
+            roundNumber={roundData.roundNumber}
+            questionText={roundData.glyphText}
+          />
+        )}
       </div>
 
       <div className="mt-[32px] sm:mt-[60px] relative z-20 flex justify-center w-full px-4">
@@ -553,12 +609,27 @@ export default function TableView(): JSX.Element {
         </div>
       </div>
 
+      {/* Round Readiness Row - shows during active rounds */}
+      {roundData &&
+        roundData.status === "active" &&
+        readinessData &&
+        isParticipant && (
+          <div className="mt-6 mb-24 sm:mb-0 relative z-50 flex justify-center w-full">
+            <RoundReadinessRow
+              readyCount={readinessData.readyCount}
+              totalCount={readinessData.totalCount}
+              readyUserIds={readinessData.readyUserIds}
+              isUserReady={readinessData.readyUserIds.includes(me)}
+            />
+          </div>
+        )}
+
       {/* Mobile Bottom Sheet Panel (max-width: 768px) */}
       <div
         className={`
           w-full px-2
           ${isMobile ? "fixed bottom-0 left-0 right-0 z-40" : "mt-[32px] sm:mt-[20px]"}
-          ${isMobile ? (isPanelExpanded ? "h-[40vh]" : "h-[80px]") : ""}
+          ${isMobile ? (isPanelExpanded ? "h-[65vh]" : "h-[80px]") : ""}
           ${isMobile ? "transition-all duration-300 ease-in-out" : ""}
         `}
         onTouchStart={handlePanelTouchStart}
