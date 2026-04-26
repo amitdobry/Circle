@@ -8,7 +8,6 @@ import GliffLog from "./GliffMessageComponent/GliffLog";
 import SessionTimer from "./SessionTimer";
 import SessionLengthPicker from "./SessionLengthPicker";
 import { clearTableSession } from "../utils/tableSession";
-import RoundQuestion from "./RoundQuestion";
 import RoundReadinessRow from "./RoundReadinessRow";
 
 type PointerMap = Record<string, string>;
@@ -586,14 +585,6 @@ export default function TableView(): JSX.Element {
             );
           })}
         </svg>
-
-        {/* Round Question Display - overlays the circle center during active rounds */}
-        {roundData && roundData.status === "active" && (
-          <RoundQuestion
-            roundNumber={roundData.roundNumber}
-            questionText={roundData.glyphText}
-          />
-        )}
       </div>
 
       <div className="mt-[32px] sm:mt-[60px] relative z-20 flex justify-center w-full px-4">

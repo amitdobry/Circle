@@ -16,7 +16,7 @@ function collapseStream(entries: GliffMessage[]): JSX.Element[] {
       parts.push(
         <div key={key} className="whitespace-pre-wrap mb-1 font-semibold">
           <b>{currentSpeaker}</b>: {currentElements}
-        </div>
+        </div>,
       );
     }
     currentElements = [];
@@ -24,6 +24,23 @@ function collapseStream(entries: GliffMessage[]): JSX.Element[] {
 
   for (let i = 0; i < entries.length; i++) {
     const { userName, message } = entries[i];
+
+    // 🆕 Handle "context" messages (round questions) - simple text like regular messages
+    if (message.messageType === "context") {
+      flush(`flush-before-context-${i}`); // Flush any ongoing text
+
+      parts.push(
+        <div key={`context-${i}`} className="w-full mb-3">
+          <div className="whitespace-pre-wrap mb-1 font-semibold">
+            <b>{userName}</b>: {message.content}
+          </div>
+          <div className="border-b border-gray-300 my-2"></div>
+        </div>,
+      );
+
+      currentSpeaker = null; // Reset speaker context after system message
+      continue;
+    }
 
     if (message.messageType === "textInput") {
       if (!currentSpeaker || userName !== currentSpeaker) {
@@ -39,7 +56,7 @@ function collapseStream(entries: GliffMessage[]): JSX.Element[] {
           title={`${userName}: ${message.content}`}
           className="inline-block mx-1 text-xl text-indigo-600 align-middle cursor-default">
           {message.emoji}
-        </span>
+        </span>,
       );
     }
   }
