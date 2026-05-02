@@ -8,7 +8,9 @@ import GliffLog from "./GliffMessageComponent/GliffLog";
 import SessionTimer from "./SessionTimer";
 import SessionLengthPicker from "./SessionLengthPicker";
 import { clearTableSession } from "../utils/tableSession";
+import { getOrCreateUserId } from "../utils/userId";
 import RoundReadinessRow from "./RoundReadinessRow";
+import MobileReadinessIndicator from "./MobileReadinessIndicator";
 
 type PointerMap = Record<string, string>;
 
@@ -422,6 +424,19 @@ export default function TableView(): JSX.Element {
       data-testid="table-view"
       className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-start text-gray-800"
       style={isMobile ? { paddingBottom: "calc(30vh + 16px)" } : undefined}>
+      {/* Mobile Readiness Indicator — absolute top-right, same row as Leave button */}
+      {isMobile &&
+        roundData &&
+        roundData.status === "active" &&
+        readinessData &&
+        isParticipant && (
+          <MobileReadinessIndicator
+            readyCount={readinessData.readyCount}
+            totalCount={readinessData.totalCount}
+            isReady={readinessData.readyUserIds.includes(getOrCreateUserId())}
+          />
+        )}
+
       {/* Leave Button - Top Left Corner */}
       <button
         onClick={() => {
@@ -607,7 +622,7 @@ export default function TableView(): JSX.Element {
         </div>
       </div>
 
-      {/* Round Readiness Row — desktop only (mobile lives inside the panel) */}
+      {/* Round Readiness Row — desktop only */}
       {!isMobile &&
         roundData &&
         roundData.status === "active" &&
@@ -618,7 +633,9 @@ export default function TableView(): JSX.Element {
               readyCount={readinessData.readyCount}
               totalCount={readinessData.totalCount}
               readyUserIds={readinessData.readyUserIds}
-              isUserReady={readinessData.readyUserIds.includes(me)}
+              isUserReady={readinessData.readyUserIds.includes(
+                getOrCreateUserId(),
+              )}
             />
           </div>
         )}
@@ -639,21 +656,6 @@ export default function TableView(): JSX.Element {
             onClick={handleHeaderTap}>
             <div className="w-10 h-1 bg-gray-300 rounded-full" />
           </div>
-
-          {/* Round Readiness Row — pinned inside panel top on mobile */}
-          {roundData &&
-            roundData.status === "active" &&
-            readinessData &&
-            isParticipant && (
-              <div className="shrink-0 px-4 pb-1 flex justify-center">
-                <RoundReadinessRow
-                  readyCount={readinessData.readyCount}
-                  totalCount={readinessData.totalCount}
-                  readyUserIds={readinessData.readyUserIds}
-                  isUserReady={readinessData.readyUserIds.includes(me)}
-                />
-              </div>
-            )}
 
           {/* Panel content — always visible, internal scroll */}
           {isParticipant && (

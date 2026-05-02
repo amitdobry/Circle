@@ -16,7 +16,11 @@ export default function RoundReadinessIndicator({
   readyUserIds,
 }: RoundReadinessIndicatorProps) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+    <div
+      data-testid="round-readiness-indicator"
+      data-ready-count={readyCount}
+      data-total-count={totalCount}
+      className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
       <span className="text-2xl">⏭️</span>
       <span className="text-sm font-medium">
         {readyCount} / {totalCount} ready for next question

@@ -20,7 +20,9 @@ export default function RoundReadinessRow({
   isUserReady,
 }: RoundReadinessRowProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
+    <div
+      data-testid="round-readiness-row"
+      className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
       <RoundReadinessIndicator
         readyCount={readyCount}
         totalCount={totalCount}
