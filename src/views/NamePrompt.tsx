@@ -231,6 +231,7 @@ export default function NamePrompt() {
       <h1 className="text-3xl font-bold mb-4">Join the Circle</h1>
 
       <input
+        data-testid="name-input"
         type="text"
         placeholder="Enter your name"
         value={name}
@@ -247,6 +248,7 @@ export default function NamePrompt() {
             return (
               <button
                 key={avatar.id}
+                data-testid={`avatar-select-${avatar.id}`}
                 onClick={() =>
                   !isTaken ? setSelectedAvatarId(avatar.id) : null
                 }
@@ -283,6 +285,7 @@ export default function NamePrompt() {
       )}
 
       <button
+        data-testid="join-button"
         onClick={handleJoin}
         className="bg-emerald-600 text-white px-6 py-2 rounded-lg text-lg hover:bg-emerald-700">
         Join Circle

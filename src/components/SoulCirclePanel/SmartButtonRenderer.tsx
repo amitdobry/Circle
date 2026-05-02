@@ -255,14 +255,16 @@ export default function SmartButtonRenderer({
               actionType: "bluePersonChosen",
               targetUser: config.targetUser,
             });
-            break;          case "earBluePersonChosen":
+            break;
+          case "earBluePersonChosen":
             socket.emit("clientEmits", {
               name: me,
               type: "blue",
               actionType: "earBluePersonChosen",
               targetUser: config.targetUser,
             });
-            break;          case "acceptMicOfferFromPassTheMic":
+            break;
+          case "acceptMicOfferFromPassTheMic":
             socket.emit("clientEmits", {
               name: me,
               type: config.group,
@@ -293,8 +295,27 @@ export default function SmartButtonRenderer({
     }
   };
 
+  // Generate a stable test ID based on button config
+  const getTestId = () => {
+    if (config.type === "attentionTarget") {
+      if (config.actionType === "raiseHand") return "ready-to-glow-button";
+      if (config.actionType === "point" && config.targetUser)
+        return `point-button-${config.targetUser}`;
+    }
+    if (config.type === "speakerControl" && config.control)
+      return `speaker-control-${config.control}`;
+    if (config.type === "listenerControl" && config.actionType)
+      return `listener-control-${config.actionType}`;
+    if (config.type === "gesture" && config.group)
+      return `gesture-button-${config.group}-${config.control || config.actionType}`;
+    return undefined;
+  };
+
   return (
-    <button onClick={handleClick} className={buttonClass}>
+    <button
+      onClick={handleClick}
+      className={buttonClass}
+      data-testid={getTestId()}>
       {config.icon && <span className={iconClass}>{config.icon}</span>}
       {config.label}
     </button>

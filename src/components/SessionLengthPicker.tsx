@@ -27,7 +27,9 @@ const SessionLengthPicker: React.FC<SessionLengthPickerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      data-testid="session-length-picker"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h2 className="text-xl font-bold mb-4 text-center">
           Choose Session Length
@@ -43,6 +45,7 @@ const SessionLengthPicker: React.FC<SessionLengthPickerProps> = ({
               {durations.map((duration) => (
                 <button
                   key={duration}
+                  data-testid={`session-duration-${duration}`}
                   onClick={() => onSelect(duration)}
                   className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
                   {duration} minutes

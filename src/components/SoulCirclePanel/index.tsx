@@ -30,34 +30,34 @@ export default function SoulCirclePanel({
   useEffect(() => {
     const refreshUserList = () => {
       console.log(
-        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'user-list' event detected for ${me}, re-fetching panel config`
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'user-list' event detected for ${me}, re-fetching panel config`,
       );
       fetchPanelLayout();
     };
 
     const refreshAvatars = () => {
       console.log(
-        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'avatars' event detected for ${me}, re-fetching panel config`
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'avatars' event detected for ${me}, re-fetching panel config`,
       );
       fetchPanelLayout();
     };
 
     const refreshLiveSpeaker = () => {
       console.log(
-        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'live-speaker' event detected for ${me}, re-fetching panel config`
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'live-speaker' event detected for ${me}, re-fetching panel config`,
       );
       fetchPanelLayout();
     };
 
     const refreshPointerMap = () => {
       console.log(
-        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'initial-pointer-map' event detected for ${me}, re-fetching panel config`
+        `[SoulCirclePanel] 🔄 EVENT-TRIGGER: 'initial-pointer-map' event detected for ${me}, re-fetching panel config`,
       );
       fetchPanelLayout();
     };
 
     console.log(
-      `[SoulCirclePanel] 🎧 LISTENERS: Setting up socket listeners for ${me}`
+      `[SoulCirclePanel] 🎧 LISTENERS: Setting up socket listeners for ${me}`,
     );
     socket.on("user-list", refreshUserList);
     socket.on("avatars", refreshAvatars);
@@ -96,8 +96,14 @@ export default function SoulCirclePanel({
   // <div className="p-4 border border-white/85 rounded-xl flex flex-col items-center gap-3 transition-transform duration-300 hover:scale-105">
 
   return (
-    <div key={panelKey} className={topScopeStyle}>
+    <div
+      key={panelKey}
+      data-testid="soulcircle-panel"
+      data-panel-key={panelKey}
+      className={topScopeStyle}>
       {panelConfig.map((panelSection) => {
+        const sectionTestId = `panel-section-${panelSection.id}`;
+        const panelTypeAttr = panelSection.panelType || undefined;
         switch (panelSection.layout) {
           case "row":
             switch (panelSection.panelType) {
@@ -105,6 +111,8 @@ export default function SoulCirclePanel({
                 return (
                   <div
                     key={panelSection.id}
+                    data-testid={sectionTestId}
+                    data-panel-type={panelTypeAttr}
                     className={
                       panelSection.panelStyle || "default-class-if-needed"
                     }>
@@ -118,6 +126,8 @@ export default function SoulCirclePanel({
                 return (
                   <div
                     key={panelSection.id}
+                    data-testid={sectionTestId}
+                    data-panel-type={panelTypeAttr}
                     className="flex flex-row justify-center gap-2">
                     <textarea
                       value={userInput}
@@ -139,6 +149,8 @@ export default function SoulCirclePanel({
                 return (
                   <div
                     key={panelSection.id}
+                    data-testid={sectionTestId}
+                    data-panel-type={panelTypeAttr}
                     className="flex flex-wrap justify-center gap-2">
                     {panelSection.blocks.map((block) => (
                       <RenderBlock key={block.id} block={block} me={me} />
@@ -150,6 +162,8 @@ export default function SoulCirclePanel({
                 return (
                   <div
                     key={panelSection.id}
+                    data-testid={sectionTestId}
+                    data-panel-type={panelTypeAttr}
                     className="flex flex-wrap justify-center gap-2">
                     {panelSection.blocks.map((block) => (
                       <RenderBlock key={block.id} block={block} me={me} />
@@ -163,11 +177,13 @@ export default function SoulCirclePanel({
               case "speakerPanel":
                 console.log(
                   `[SoulCirclePanel] Rendering COLUMN speaker panel for: ${me}`,
-                  panelSection
+                  panelSection,
                 );
                 return (
                   <div
                     key={panelSection.id}
+                    data-testid={sectionTestId}
+                    data-panel-type={panelTypeAttr}
                     className="flex flex-col items-center gap-3">
                     {panelSection.blocks.map((block) => (
                       <RenderBlock key={block.id} block={block} me={me} />
@@ -179,6 +195,8 @@ export default function SoulCirclePanel({
                 return (
                   <div
                     key={panelSection.id}
+                    data-testid={sectionTestId}
+                    data-panel-type={panelTypeAttr}
                     className="flex flex-col items-center gap-3 bg-yellow-50 p-4 rounded shadow">
                     {panelSection.blocks.map((block) => (
                       <RenderBlock key={block.id} block={block} me={me} />
@@ -190,6 +208,8 @@ export default function SoulCirclePanel({
                 return (
                   <div
                     key={panelSection.id}
+                    data-testid={sectionTestId}
+                    data-panel-type={panelTypeAttr}
                     className="flex flex-col items-center gap-2">
                     {panelSection.blocks.map((block) => (
                       <RenderBlock key={block.id} block={block} me={me} />
@@ -202,6 +222,8 @@ export default function SoulCirclePanel({
             return (
               <div
                 key={panelSection.id}
+                data-testid={sectionTestId}
+                data-panel-type={panelTypeAttr}
                 className="flex flex-col items-center gap-2">
                 {panelSection.blocks.map((block) => (
                   <RenderBlock key={block.id} block={block} me={me} />

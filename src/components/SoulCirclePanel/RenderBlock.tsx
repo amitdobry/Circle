@@ -12,16 +12,9 @@ export default function RenderBlock({ block, me }: Props) {
   switch (block.type) {
     case "text":
       return (
-        // <p
-        //   className={`
-        //     text-${block.size || "base"}
-        //     text-${block.align || "center"}
-        //     text-gray-700
-        // ${block.style || ""}
-        //   `.trim()}>
-        //   {block.content}
-        // </p>
-        <p className={block.textClass}>{block.content}</p>
+        <p data-testid={`text-${block.id}`} className={block.textClass}>
+          {block.content}
+        </p>
       );
 
     case "emoji":
@@ -52,7 +45,7 @@ export default function RenderBlock({ block, me }: Props) {
 
     case "subjectSelection":
       return (
-        <div className="w-full space-y-3">
+        <div data-testid="subject-selection" className="w-full space-y-3">
           {block.subjects.map((subject) => {
             const isSelected = block.selectedSubject === subject.key;
             const isDisabled = block.hasVoted;
@@ -60,6 +53,7 @@ export default function RenderBlock({ block, me }: Props) {
             return (
               <button
                 key={subject.key}
+                data-testid={`subject-vote-${subject.key}`}
                 onClick={() => {
                   if (!isDisabled) {
                     socket.emit("content:vote-subject", {

@@ -54,7 +54,7 @@ export default function TableView(): JSX.Element {
   const [fadeKey, setFadeKey] = useState(0);
   const [showSessionPicker, setShowSessionPicker] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
-  const [isPanelExpanded, setIsPanelExpanded] = useState(false);
+  const [panelMode, setPanelMode] = useState<"peek" | "expanded">("peek");
   const [touchStartY, setTouchStartY] = useState(0);
 
   // Content Phase & Rounds state
@@ -396,33 +396,32 @@ export default function TableView(): JSX.Element {
 
   const handlePanelTouchMove = (e: React.TouchEvent) => {
     if (!isMobile) return;
-
-    const touchY = e.touches[0].clientY;
-    const deltaY = touchY - touchStartY;
-
-    // Swipe down to collapse (when expanded)
-    if (deltaY > 50 && isPanelExpanded) {
-      setIsPanelExpanded(false);
-    }
-
-    // Swipe up to expand (when collapsed)
-    if (deltaY < -50 && !isPanelExpanded) {
-      setIsPanelExpanded(true);
-    }
+    const deltaY = e.touches[0].clientY - touchStartY;
+    if (deltaY > 60) setPanelMode("peek");
+    if (deltaY < -60) setPanelMode("expanded");
   };
 
-  const handlePanelTap = () => {
-    if (isMobile) {
-      setIsPanelExpanded(!isPanelExpanded);
-    }
+  const handleHeaderTap = () => {
+    if (!isMobile) return;
+    setPanelMode((prev) => (prev === "peek" ? "expanded" : "peek"));
   };
+
+  // Auto-expand panel when user becomes the live speaker
+  useEffect(() => {
+    if (isMeLive) {
+      setPanelMode("expanded");
+    }
+  }, [isMeLive]);
 
   const radiusX = svgCenter.x * (isMobile ? 0.85 : 1.1);
   const radiusY = svgCenter.y * (isMobile ? 0.8 : 0.95);
   const positions: Record<string, { x: number; y: number }> = {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-start text-gray-800">
+    <div
+      data-testid="table-view"
+      className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-emerald-100 p-4 flex flex-col items-center justify-start text-gray-800"
+      style={isMobile ? { paddingBottom: "calc(30vh + 16px)" } : undefined}>
       {/* Leave Button - Top Left Corner */}
       <button
         onClick={() => {
@@ -445,6 +444,7 @@ export default function TableView(): JSX.Element {
           });
         }}
         disabled={isLeaving}
+        data-testid="leave-button"
         className={`absolute top-4 left-4 px-4 py-2 ${isLeaving ? "bg-rose-400 cursor-not-allowed" : "bg-rose-500 hover:bg-rose-600"} text-white font-semibold rounded-lg shadow-md transition-colors duration-200 z-50 flex items-center gap-2`}
         aria-label="Leave table">
         <span className="text-lg">←</span>
@@ -504,11 +504,14 @@ export default function TableView(): JSX.Element {
           return (
             <div
               key={user.name}
+              data-testid={`participant-${user.name}`}
               className={`absolute flex flex-col items-center text-center z-10 transition-all ${
                 isGhost ? "opacity-50" : ""
               }`}
               style={{ transform: `translate(${x}px, ${y}px)` }}>
-              <div className="font-semibold text-xs sm:text-sm mb-1 truncate max-w-[80px]">
+              <div
+                data-testid={`participant-name-${user.name}`}
+                className="font-semibold text-xs sm:text-sm mb-1 truncate max-w-[80px]">
                 {user.name}
                 {isGhost && " 👻"}
               </div>
@@ -537,12 +540,16 @@ export default function TableView(): JSX.Element {
                   <div className="text-yellow-500 text-lg">☝️</div>
                 )}
                 {isLive && (
-                  <div className="bg-red-500 text-white px-2 py-[2px] rounded-full text-xs">
+                  <div
+                    data-testid={`participant-live-${user.name}`}
+                    className="bg-red-500 text-white px-2 py-[2px] rounded-full text-xs">
                     Live
                   </div>
                 )}
                 {isMe && (
-                  <div className="text-[10px] text-emerald-600 font-medium">
+                  <div
+                    data-testid={`participant-you-${user.name}`}
+                    className="text-[10px] text-emerald-600 font-medium">
                     You
                   </div>
                 )}
@@ -600,12 +607,13 @@ export default function TableView(): JSX.Element {
         </div>
       </div>
 
-      {/* Round Readiness Row - shows during active rounds */}
-      {roundData &&
+      {/* Round Readiness Row — desktop only (mobile lives inside the panel) */}
+      {!isMobile &&
+        roundData &&
         roundData.status === "active" &&
         readinessData &&
         isParticipant && (
-          <div className="mt-6 mb-24 sm:mb-0 relative z-50 flex justify-center w-full">
+          <div className="mt-6 relative z-50 flex justify-center w-full">
             <RoundReadinessRow
               readyCount={readinessData.readyCount}
               totalCount={readinessData.totalCount}
@@ -615,33 +623,67 @@ export default function TableView(): JSX.Element {
           </div>
         )}
 
-      {/* Mobile Bottom Sheet Panel (max-width: 768px) */}
-      <div
-        className={`
-          w-full px-2
-          ${isMobile ? "fixed bottom-0 left-0 right-0 z-40" : "mt-[32px] sm:mt-[20px]"}
-          ${isMobile ? (isPanelExpanded ? "h-[65vh]" : "h-[80px]") : ""}
-          ${isMobile ? "transition-all duration-300 ease-in-out" : ""}
-        `}
-        onTouchStart={handlePanelTouchStart}
-        onTouchMove={handlePanelTouchMove}
-        onClick={handlePanelTap}>
+      {/* Smart Mobile Control Panel — fixed bottom sheet (mobile only) */}
+      {isMobile ? (
         <div
-          className={`
-            max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2
-            ${isMobile ? "shadow-2xl rounded-t-2xl rounded-b-none h-full overflow-y-auto" : ""}
-          `}>
+          className="fixed bottom-0 left-0 right-0 z-40 flex flex-col transition-[height] duration-300 ease-in-out"
+          style={{ height: panelMode === "peek" ? "30vh" : "40vh" }}>
+          {/* Sheet background */}
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-md rounded-t-2xl shadow-2xl -z-10" />
+
+          {/* Drag handle — tap or swipe to toggle size */}
+          <div
+            className="flex justify-center pt-2 pb-1 shrink-0 cursor-pointer select-none"
+            onTouchStart={handlePanelTouchStart}
+            onTouchMove={handlePanelTouchMove}
+            onClick={handleHeaderTap}>
+            <div className="w-10 h-1 bg-gray-300 rounded-full" />
+          </div>
+
+          {/* Round Readiness Row — pinned inside panel top on mobile */}
+          {roundData &&
+            roundData.status === "active" &&
+            readinessData &&
+            isParticipant && (
+              <div className="shrink-0 px-4 pb-1 flex justify-center">
+                <RoundReadinessRow
+                  readyCount={readinessData.readyCount}
+                  totalCount={readinessData.totalCount}
+                  readyUserIds={readinessData.readyUserIds}
+                  isUserReady={readinessData.readyUserIds.includes(me)}
+                />
+              </div>
+            )}
+
+          {/* Panel content — always visible, internal scroll */}
           {isParticipant && (
-            <SoulCirclePanel
-              me={me}
-              isMeLive={isMeLive}
-              userInput={userInput}
-              handleLogInput={handleLogInput}
-              handleLogKeyDown={handleLogKeyDown}
-            />
+            <div className="flex-1 px-4 pb-3 overflow-y-auto overscroll-contain">
+              <SoulCirclePanel
+                me={me}
+                isMeLive={isMeLive}
+                userInput={userInput}
+                handleLogInput={handleLogInput}
+                handleLogKeyDown={handleLogKeyDown}
+              />
+            </div>
           )}
         </div>
-      </div>
+      ) : (
+        /* Desktop: regular flow layout — unchanged */
+        <div className="mt-[32px] sm:mt-[20px] w-full px-2">
+          <div className="max-w-md mx-auto bg-white/70 backdrop-blur-md rounded-xl shadow-md p-4 flex flex-wrap justify-center gap-2">
+            {isParticipant && (
+              <SoulCirclePanel
+                me={me}
+                isMeLive={isMeLive}
+                userInput={userInput}
+                handleLogInput={handleLogInput}
+                handleLogKeyDown={handleLogKeyDown}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {prompt && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-xl border border-gray-300 px-4 py-3 z-50 max-w-sm w-full text-center">

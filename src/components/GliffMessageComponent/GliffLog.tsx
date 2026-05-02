@@ -69,7 +69,9 @@ export default function GliffLog({ entries, me }: Props) {
   const collapsed = collapseStream(entries);
 
   return (
-    <div className="flex flex-col justify-center items-center h-full px-4 py-7 text-[#3a2e22] font-serif text-[11px] sm:text-xs text-center leading-tight overflow-y-auto max-w-[70%] sm:max-w-[65%]">
+    <div
+      data-testid="gliff-log"
+      className="flex flex-col justify-center items-center h-full px-4 py-7 text-[#3a2e22] font-serif text-[11px] sm:text-xs text-center leading-tight overflow-y-auto max-w-[70%] sm:max-w-[65%]">
       {collapsed}
     </div>
   );
